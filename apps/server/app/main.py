@@ -19,10 +19,12 @@ app = FastAPI(title="Trace API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    # "null" covers Electron's file:// renderer; localhost:5173 covers dev mode.
+    # Wildcard would let any site read from/write to this local API.
+    allow_origins=["null", "http://localhost:5173"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Content-Type"],
 )
 
 app.include_router(health.router, prefix="/health", tags=["health"])

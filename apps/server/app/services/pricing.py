@@ -16,6 +16,7 @@ PRICING_TABLE = {
     "gemini-2.5-pro": {"input": 1.25, "output": 10.0, "cache_read": 0.0, "cache_write": 0.0},
     "gemini-2.5-flash": {"input": 0.15, "output": 0.6, "cache_read": 0.0, "cache_write": 0.0},
     "gemini-1.5-pro": {"input": 1.25, "output": 5.0, "cache_read": 0.0, "cache_write": 0.0},
+    "antigravity": {"input": 0.15, "output": 0.6, "cache_read": 0.0, "cache_write": 0.0},
 
     # Fallback
     "default": {"input": 1.0, "output": 3.0, "cache_read": 0.0, "cache_write": 0.0},

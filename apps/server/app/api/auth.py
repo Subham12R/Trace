@@ -1,9 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.services.auth import get_credential, set_credential, delete_credential, has_credential
 
 router = APIRouter()
+
+ALLOWED_PROVIDERS = {"anthropic", "opencode-cloud"}
 
 
 class CredentialInput(BaseModel):
@@ -34,6 +36,8 @@ def provider_status(provider: str):
 
 @router.post("/{provider}/connect")
 def connect_provider(provider: str, data: CredentialInput):
+    if provider not in ALLOWED_PROVIDERS:
+        raise HTTPException(status_code=400, detail=f"Unknown provider: {provider}")
     success = set_credential(provider, data.credential)
     return {
         "provider": provider,
@@ -43,6 +47,8 @@ def connect_provider(provider: str, data: CredentialInput):
 
 @router.delete("/{provider}/disconnect")
 def disconnect_provider(provider: str):
+    if provider not in ALLOWED_PROVIDERS:
+        raise HTTPException(status_code=400, detail=f"Unknown provider: {provider}")
     success = delete_credential(provider)
     return {
         "provider": provider,

@@ -30,6 +30,12 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
   }
 
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const isLocal = url.startsWith('file://') || url.startsWith('http://localhost')
+    if (!isLocal) event.preventDefault()
+  })
+
   mainWindow.on('closed', () => {
     mainWindow = null
   })

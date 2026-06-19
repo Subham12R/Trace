@@ -42,7 +42,7 @@ class AntigravityParser(BaseParser):
         # Collect steps, then aggregate by conversation
         total_input = 0
         total_output = 0
-        model = "gemini-3.5-flash"
+        model = "antigravity"
         ts_first = None
 
         for line in text.strip().splitlines():
@@ -75,15 +75,15 @@ class AntigravityParser(BaseParser):
                 total_input += int(inp)
                 total_output += int(out)
 
-                if not model:
-                    model = usage.get("model") or step.get("model")
+                if not model or model == "antigravity":
+                    model = usage.get("model") or step.get("model") or model
                 if not ts_first:
                     ts_raw = step.get("created_at") or step.get("timestamp")
                     ts_first = self._parse_ts(ts_raw)
 
             # Also grab model from PLANNER_RESPONSE or similar steps
-            if not model:
-                model = step.get("model")
+            if not model or model == "antigravity":
+                model = step.get("model") or model
 
             # First timestamp from step
             if not ts_first:
@@ -100,6 +100,9 @@ class AntigravityParser(BaseParser):
             )
             if step_count == 0:
                 return
+            # Assign reasonable token estimates per step (e.g. 15,000 input, 1,000 output tokens)
+            total_input = step_count * 15000
+            total_output = step_count * 1000
 
         yield {
             "session_id": conversation_id,

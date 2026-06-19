@@ -54,6 +54,11 @@ def scan_source(source: str, cfg: dict):
                     files.extend(base_path.rglob(f"*.{ext_match.group(1)}"))
 
         for file_path in set(files):
+            # Skip dependency and virtual environment directories to prevent scanning vendor files
+            file_str = str(file_path)
+            if any(p in file_str for p in ["node_modules", "venv", ".venv", "site-packages"]):
+                continue
+
             if file_path.is_file():
                 try:
                     ingest_file(source, file_path)
