@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from app.core.database import init_db
 from app.core.watcher import start_watcher, stop_watcher
-from app.api import metrics, health
+from app.api import metrics, health, auth, cloud_sync
 
 
 @asynccontextmanager
@@ -26,4 +26,6 @@ app.add_middleware(
 )
 
 app.include_router(health.router, prefix="/health", tags=["health"])
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(cloud_sync.router, prefix="/api/cloud", tags=["cloud"])
 app.include_router(metrics.router, prefix="/api/metrics", tags=["metrics"])

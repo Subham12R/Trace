@@ -17,7 +17,7 @@ SOURCE_CONFIG: Dict[str, Dict] = {
     "opencode": {
         "env": "OPENCODE_DATA_DIR",
         "defaults": ["~/.local/share/opencode"],
-        "pattern": "**/*.{json,jsonl}",
+        "pattern": "**/*.db",
     },
     "amp": {
         "env": "AMP_DATA_DIR",

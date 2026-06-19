@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/app-shell";
-import { Dashboard } from "@/components/Dashboard";
+import { AppSidebar } from "@/components/app-sidebar";
+import { InsightsPage } from "@/components/InsightsPage";
+import { ActivityPage } from "@/components/ActivityPage";
 import { SettingsPage } from "@/components/SettingsPage";
 
 function getHash() {
-	return window.location.hash.replace("#", "") || "dashboard";
+	return window.location.hash.replace("#", "") || "home";
 }
 
 export default function App() {
@@ -18,14 +19,19 @@ export default function App() {
 	}, []);
 
 	return (
-		<TooltipProvider>
-			<AppShell>
-				{page === "settings" || page === "providers" ? (
-					<SettingsPage />
-				) : (
-					<Dashboard />
-				)}
-			</AppShell>
-		</TooltipProvider>
+		<AppShell>
+			<div className="flex">
+				<AppSidebar />
+				<main className="flex-1 ml-[220px] min-h-screen">
+					{page === "home" || page === "dashboard" ? (
+						<InsightsPage />
+					) : page === "insights" || page === "activity" ? (
+						<ActivityPage />
+					) : (
+						<SettingsPage />
+					)}
+				</main>
+			</div>
+		</AppShell>
 	);
 }

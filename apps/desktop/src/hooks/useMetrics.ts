@@ -63,3 +63,24 @@ export function useProviders() {
     staleTime: 20000,
   })
 }
+
+export interface AuthStatus {
+  provider: string
+  connected: boolean
+}
+
+export function useAuthStatus() {
+  return useQuery<Record<string, AuthStatus>>({
+    queryKey: ['auth', 'status'],
+    queryFn: () => api.get('/api/auth/status'),
+    refetchInterval: 10000,
+  })
+}
+
+export async function connectProvider(provider: string, credential: string) {
+  return api.post(`/api/auth/${provider}/connect`, { provider, credential })
+}
+
+export async function disconnectProvider(provider: string) {
+  return api.delete(`/api/auth/${provider}/disconnect`)
+}

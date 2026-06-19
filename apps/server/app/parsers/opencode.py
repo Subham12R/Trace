@@ -1,4 +1,5 @@
 import json
+import sqlite3
 from pathlib import Path
 from typing import Iterator, Dict, Any
 from datetime import datetime
@@ -7,47 +8,87 @@ from app.parsers.base import BaseParser
 
 
 class OpenCodeParser(BaseParser):
+    """Parse OpenCode usage from its SQLite database."""
+
     def can_parse(self, file_path: Path) -> bool:
-        return file_path.suffix in (".json", ".jsonl")
+        return file_path.suffix == ".db"
 
     def parse(self, file_path: Path) -> Iterator[Dict[str, Any]]:
-        text = file_path.read_text(encoding="utf-8", errors="ignore")
+        try:
+            conn = sqlite3.connect(str(file_path))
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
 
-        if file_path.suffix == ".jsonl":
-            for line in text.strip().splitlines():
-                if not line.strip():
-                    continue
-                try:
-                    record = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                yield self._normalize(record)
-        else:
+            # First try the session table (aggregated per session)
             try:
-                data = json.loads(text)
-            except json.JSONDecodeError:
-                return
-            records = data if isinstance(data, list) else [data]
-            for record in records:
-                yield self._normalize(record)
+                cursor.execute("""
+                    SELECT id, title, directory, model, cost,
+                           tokens_input, tokens_output, tokens_reasoning,
+                           tokens_cache_read, tokens_cache_write,
+                           time_created, time_updated
+                    FROM session
+                    WHERE tokens_input > 0 OR tokens_output > 0
+                """)
+                rows = cursor.fetchall()
+                for row in rows:
+                    yield {
+                        "session_id": row["id"],
+                        "timestamp": self._parse_ts(row["time_created"]),
+                        "model": row["model"],
+                        "input_tokens": row["tokens_input"] or 0,
+                        "output_tokens": row["tokens_output"] or 0,
+                        "cache_read_tokens": row["tokens_cache_read"] or 0,
+                        "cache_write_tokens": row["tokens_cache_write"] or 0,
+                        "project": row["directory"],
+                        "latency_ms": None,
+                    }
 
-    def _normalize(self, record: dict) -> dict:
-        usage = record.get("usage") or {}
-        ts = record.get("timestamp") or record.get("created_at")
-        return {
-            "session_id": record.get("session_id") or record.get("conversation_id"),
-            "timestamp": self._parse_ts(ts) if ts else datetime.utcnow(),
-            "model": record.get("model"),
-            "input_tokens": usage.get("input_tokens", 0) or usage.get("prompt_tokens", 0),
-            "output_tokens": usage.get("output_tokens", 0) or usage.get("completion_tokens", 0),
-            "cache_read_tokens": usage.get("cache_read_tokens", 0),
-            "cache_write_tokens": usage.get("cache_write_tokens", 0),
-            "project": record.get("project") or record.get("cwd"),
-            "latency_ms": record.get("latency_ms"),
-        }
+                if rows:
+                    conn.close()
+                    return
+            except Exception:
+                pass
+
+            # Fallback: parse individual messages
+            try:
+                cursor.execute("""
+                    SELECT id, session_id, time_created, data
+                    FROM message
+                    WHERE data LIKE '%tokens%'
+                """)
+                for row in cursor.fetchall():
+                    try:
+                        data = json.loads(row["data"])
+                    except json.JSONDecodeError:
+                        continue
+
+                    tokens = data.get("tokens", {})
+                    if not tokens:
+                        continue
+
+                    yield {
+                        "session_id": row["session_id"],
+                        "timestamp": self._parse_ts(row["time_created"]),
+                        "model": data.get("modelID"),
+                        "input_tokens": tokens.get("input", 0),
+                        "output_tokens": tokens.get("output", 0),
+                        "cache_read_tokens": tokens.get("cache", {}).get("read", 0),
+                        "cache_write_tokens": tokens.get("cache", {}).get("write", 0),
+                        "project": data.get("path", {}).get("cwd"),
+                        "latency_ms": None,
+                    }
+            except Exception:
+                pass
+
+            conn.close()
+        except Exception as e:
+            print(f"[OpenCodeParser] Error parsing {file_path}: {e}")
 
     def _parse_ts(self, ts) -> datetime:
         if isinstance(ts, (int, float)):
+            # OpenCode stores milliseconds
+            if ts > 1e12:
+                ts = ts / 1000
             return datetime.utcfromtimestamp(ts)
         if isinstance(ts, str):
             try:

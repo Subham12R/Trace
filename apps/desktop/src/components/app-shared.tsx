@@ -1,64 +1,37 @@
 import type { ReactNode } from "react";
-import { LayoutDashboard, Activity, Settings, Plug } from "lucide-react";
+import { Home, BarChart3, Settings } from "lucide-react";
 
-export type SidebarNavItem = {
+export type NavItem = {
 	title: string;
-	path?: string;
-	icon?: ReactNode;
+	path: string;
+	icon: ReactNode;
 	isActive?: boolean;
-	subItems?: SidebarNavItem[];
-};
-
-export type SidebarNavGroup = {
-	label: string;
-	items: SidebarNavItem[];
 };
 
 function getHash() {
-	return window.location.hash.replace("#", "") || "dashboard";
+	return window.location.hash.replace("#", "") || "home";
 }
 
-export const navGroups: SidebarNavGroup[] = [
+export const mainNav: NavItem[] = [
 	{
-		label: "Overview",
-		items: [
-			{
-				title: "Dashboard",
-				path: "#/dashboard",
-				icon: <LayoutDashboard className="size-4" />,
-				isActive: getHash() === "dashboard",
-			},
-			{
-				title: "Activity",
-				path: "#/activity",
-				icon: <Activity className="size-4" />,
-				isActive: getHash() === "activity",
-			},
-		],
+		title: "Home",
+		path: "#/home",
+		icon: <Home className="size-[18px]" />,
+		isActive: getHash() === "home" || getHash() === "dashboard",
 	},
 	{
-		label: "Configuration",
-		items: [
-			{
-				title: "Providers",
-				path: "#/providers",
-				icon: <Plug className="size-4" />,
-				isActive: getHash() === "providers",
-			},
-			{
-				title: "Settings",
-				path: "#/settings",
-				icon: <Settings className="size-4" />,
-				isActive: getHash() === "settings",
-			},
-		],
+		title: "Insights",
+		path: "#/insights",
+		icon: <BarChart3 className="size-[18px]" />,
+		isActive: getHash() === "insights" || getHash() === "activity",
 	},
 ];
 
-export const navLinks: SidebarNavItem[] = [
-	...navGroups.flatMap((group) =>
-		group.items.flatMap((item) =>
-			item.subItems?.length ? [item, ...item.subItems] : [item]
-		)
-	),
+export const bottomNav: NavItem[] = [
+	{
+		title: "Settings",
+		path: "#/settings",
+		icon: <Settings className="size-[18px]" />,
+		isActive: getHash() === "settings" || getHash() === "providers",
+	},
 ];
