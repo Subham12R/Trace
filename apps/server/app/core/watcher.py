@@ -25,25 +25,35 @@ def scan_source(source: str, cfg: dict):
             else:
                 files = list(base_path.parent.glob(base_path.name))
         else:
-            # Parse pattern and glob accordingly
-            extensions = []
-            if "jsonl" in pattern:
-                extensions.append("*.jsonl")
-            if "json" in pattern:
-                extensions.append("*.json")
-            if "log" in pattern:
-                extensions.append("*.log")
-            if "db" in pattern:
-                extensions.append("*.db")
-            
-            if not extensions:
-                extensions = ["*"]
-            
             files = []
-            for ext in extensions:
-                files.extend(base_path.rglob(ext))
+            # Use the full glob pattern directly (supports ** and named files)
+            try:
+                files.extend(base_path.rglob(pattern.lstrip("**/").lstrip("**/")))
+            except Exception:
+                pass
 
-        for file_path in files:
+            # If the pattern has a specific filename (not just extension), use rglob on it
+            import re
+            filename_match = re.search(r"([^/*{}]+\.[a-zA-Z0-9]+)$", pattern)
+            if filename_match and not files:
+                filename = filename_match.group(1)
+                files.extend(base_path.rglob(filename))
+
+            # Also handle brace-expanded patterns like *.{json,jsonl}
+            if not files:
+                brace_match = re.search(r"\*\.\{([^}]+)\}", pattern)
+                if brace_match:
+                    exts = brace_match.group(1).split(",")
+                    for ext in exts:
+                        files.extend(base_path.rglob(f"*.{ext.strip()}"))
+
+            # Handle single extension patterns like **/*.jsonl
+            if not files:
+                ext_match = re.search(r"\*\.([a-zA-Z0-9]+)$", pattern)
+                if ext_match:
+                    files.extend(base_path.rglob(f"*.{ext_match.group(1)}"))
+
+        for file_path in set(files):
             if file_path.is_file():
                 try:
                     ingest_file(source, file_path)

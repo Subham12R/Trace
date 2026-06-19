@@ -44,7 +44,11 @@ class CopilotParser(BaseParser):
             return datetime.utcfromtimestamp(ts)
         if isinstance(ts, str):
             try:
-                return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                if dt.tzinfo is not None:
+                    dt = dt.replace(tzinfo=None)
+                return dt
             except ValueError:
                 pass
         return datetime.utcnow()
+

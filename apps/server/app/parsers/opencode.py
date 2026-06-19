@@ -5,6 +5,7 @@ from typing import Iterator, Dict, Any
 from datetime import datetime
 
 from app.parsers.base import BaseParser
+from app.core.git import get_branch
 
 
 class OpenCodeParser(BaseParser):
@@ -31,15 +32,17 @@ class OpenCodeParser(BaseParser):
                 """)
                 rows = cursor.fetchall()
                 for row in rows:
+                    directory = row["directory"]
                     yield {
                         "session_id": row["id"],
                         "timestamp": self._parse_ts(row["time_created"]),
-                        "model": row["model"],
+                        "model": self._extract_model_id(row["model"]),
                         "input_tokens": row["tokens_input"] or 0,
                         "output_tokens": row["tokens_output"] or 0,
                         "cache_read_tokens": row["tokens_cache_read"] or 0,
                         "cache_write_tokens": row["tokens_cache_write"] or 0,
-                        "project": row["directory"],
+                        "project": directory,
+                        "branch": get_branch(directory),
                         "latency_ms": None,
                     }
 
@@ -66,6 +69,7 @@ class OpenCodeParser(BaseParser):
                     if not tokens:
                         continue
 
+                    cwd = data.get("path", {}).get("cwd")
                     yield {
                         "session_id": row["session_id"],
                         "timestamp": self._parse_ts(row["time_created"]),
@@ -74,7 +78,8 @@ class OpenCodeParser(BaseParser):
                         "output_tokens": tokens.get("output", 0),
                         "cache_read_tokens": tokens.get("cache", {}).get("read", 0),
                         "cache_write_tokens": tokens.get("cache", {}).get("write", 0),
-                        "project": data.get("path", {}).get("cwd"),
+                        "project": cwd,
+                        "branch": get_branch(cwd),
                         "latency_ms": None,
                     }
             except Exception:
@@ -84,6 +89,21 @@ class OpenCodeParser(BaseParser):
         except Exception as e:
             print(f"[OpenCodeParser] Error parsing {file_path}: {e}")
 
+    def _extract_model_id(self, model) -> str | None:
+        if not model:
+            return None
+        if isinstance(model, str):
+            try:
+                parsed = json.loads(model)
+                if isinstance(parsed, dict):
+                    return parsed.get("id") or parsed.get("name") or model
+            except json.JSONDecodeError:
+                pass
+            return model
+        if isinstance(model, dict):
+            return model.get("id") or model.get("name")
+        return str(model)
+
     def _parse_ts(self, ts) -> datetime:
         if isinstance(ts, (int, float)):
             # OpenCode stores milliseconds
@@ -92,7 +112,11 @@ class OpenCodeParser(BaseParser):
             return datetime.utcfromtimestamp(ts)
         if isinstance(ts, str):
             try:
-                return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                # Normalize to naive UTC for consistent DB comparisons.
+                if dt.tzinfo is not None:
+                    dt = dt.replace(tzinfo=None)
+                return dt
             except ValueError:
                 pass
         return datetime.utcnow()

@@ -8,6 +8,8 @@ from app.schemas.metrics import MetricsSummary, TrendPoint, SessionSummary, Acti
 from app.services.aggregator import get_time_bucket_expr
 from app.core.config import ACTIVE_SESSION_THRESHOLD_SECONDS, detect_installed_sources, SOURCE_CONFIG
 
+from app.services.cloud_sync import fetch_claude_oauth_usage
+
 router = APIRouter()
 
 
@@ -22,6 +24,9 @@ def get_providers():
             "installed": source in installed,
             "env": cfg["env"],
             "defaults": cfg["defaults"],
+            "domain": cfg.get("domain"),
+            "logo_url": cfg.get("logo_url")
+            or (f"https://www.google.com/s2/favicons?domain={cfg['domain']}&sz=64" if cfg.get("domain") else None),
         }
         for source, cfg in SOURCE_CONFIG.items()
     ]
@@ -48,6 +53,7 @@ def summary(range: str = Query("today")):
         cache_read = q.with_entities(func.sum(Request.cache_read_tokens)).scalar() or 0
         cache_write = q.with_entities(func.sum(Request.cache_write_tokens)).scalar() or 0
         total_cost = q.with_entities(func.sum(Request.cost)).scalar() or 0.0
+        session_count = q.with_entities(func.count(func.distinct(Request.session_id))).scalar() or 0
 
         total_cache = cache_read + cache_write
         cache_hit_rate = (cache_read / total_cache * 100) if total_cache > 0 else 0.0
@@ -60,6 +66,7 @@ def summary(range: str = Query("today")):
             cache_read_tokens=int(cache_read),
             cache_write_tokens=int(cache_write),
             cache_hit_rate=round(cache_hit_rate, 1),
+            session_count=int(session_count),
         )
     finally:
         db.close()
@@ -150,6 +157,88 @@ def sessions(range: str = Query("today"), group_by: str = Query("sessions")):
         db.close()
 
 
+@router.get("/projects")
+def projects(range: str = Query("today")):
+    """Return usage breakdown per branch/project."""
+    db = SessionLocal()
+    try:
+        q = db.query(Request)
+        q = _apply_range(q, range)
+
+        rows = (
+            q.with_entities(
+                Request.branch,
+                Request.project,
+                Request.source,
+                func.count(Request.id).label("request_count"),
+                func.sum(Request.input_tokens).label("input_tokens"),
+                func.sum(Request.output_tokens).label("output_tokens"),
+                func.sum(Request.cache_read_tokens).label("cache_read_tokens"),
+                func.sum(Request.cache_write_tokens).label("cache_write_tokens"),
+                func.sum(Request.cost).label("cost"),
+                func.count(func.distinct(Request.session_id)).label("session_count"),
+            )
+            .group_by(Request.branch, Request.project, Request.source)
+            .order_by(desc("cost"))
+            .all()
+        )
+
+        return [
+            {
+                "branch": r.branch or "—",
+                "project": r.project or "unknown",
+                "source": r.source,
+                "request_count": int(r.request_count or 0),
+                "input_tokens": int(r.input_tokens or 0),
+                "output_tokens": int(r.output_tokens or 0),
+                "cache_read_tokens": int(r.cache_read_tokens or 0),
+                "cache_write_tokens": int(r.cache_write_tokens or 0),
+                "cost": round(r.cost or 0.0, 2),
+                "session_count": int(r.session_count or 0),
+            }
+            for r in rows
+        ]
+    finally:
+        db.close()
+
+
+@router.get("/models")
+def models(range: str = Query("today")):
+    """Return usage breakdown per source and model."""
+    db = SessionLocal()
+    try:
+        q = db.query(Request)
+        q = _apply_range(q, range)
+
+        rows = (
+            q.with_entities(
+                Request.source,
+                Request.model,
+                func.count(Request.id).label("request_count"),
+                func.sum(Request.input_tokens).label("input_tokens"),
+                func.sum(Request.output_tokens).label("output_tokens"),
+                func.sum(Request.cost).label("cost"),
+            )
+            .group_by(Request.source, Request.model)
+            .order_by(desc("cost"))
+            .all()
+        )
+
+        return [
+            {
+                "source": r.source,
+                "model": r.model or "unknown",
+                "request_count": int(r.request_count or 0),
+                "input_tokens": int(r.input_tokens or 0),
+                "output_tokens": int(r.output_tokens or 0),
+                "cost": round(r.cost or 0.0, 2),
+            }
+            for r in rows
+        ]
+    finally:
+        db.close()
+
+
 @router.get("/active", response_model=list[ActiveSession])
 def active_sessions():
     db = SessionLocal()
@@ -179,6 +268,114 @@ def active_sessions():
         ]
     finally:
         db.close()
+
+
+# Last successful quota response, kept in-process so that a transient failure
+# (e.g. the OAuth usage endpoint rate-limiting us) doesn't make the Provider
+# Limits panel vanish — we serve the last-known values flagged as stale.
+_quota_cache: dict = {"data": None}
+
+
+@router.get("/quota")
+def quota():
+    """Return provider quota/limits. Currently supports Claude OAuth."""
+    result = []
+    claude = fetch_claude_oauth_usage()
+    if claude:
+        limits = []
+        five_hour = claude.get("five_hour")
+        seven_day = claude.get("seven_day")
+        thirty_day = claude.get("thirty_day")
+        if five_hour:
+            limits.append({
+                "id": "rolling",
+                "label": "Rolling Usage",
+                "utilization": five_hour.get("utilization", 0),
+                "resets_at": five_hour.get("resets_at"),
+            })
+        if seven_day:
+            limits.append({
+                "id": "weekly",
+                "label": "Weekly Usage",
+                "utilization": seven_day.get("utilization", 0),
+                "resets_at": seven_day.get("resets_at"),
+            })
+        if thirty_day:
+            limits.append({
+                "id": "monthly",
+                "label": "Monthly Usage",
+                "utilization": thirty_day.get("utilization", 0),
+                "resets_at": thirty_day.get("resets_at"),
+            })
+        result.append({
+            "provider": "claude",
+            "limits": limits,
+            "last_updated": datetime.utcnow().isoformat(),
+            "stale": False,
+        })
+
+    if result:
+        _quota_cache["data"] = result
+        return result
+
+    # Live fetch returned nothing (no creds, error, or rate-limited). If we have
+    # a previous good response, serve it as stale rather than dropping the panel.
+    cached = _quota_cache["data"]
+    if cached:
+        return [{**provider, "stale": True} for provider in cached]
+    return []
+
+
+@router.post("/refresh")
+def refresh_data():
+    """Trigger an immediate scan/ingest of all source files."""
+    import threading
+    from app.core.watcher import tick
+    thread = threading.Thread(target=tick, daemon=True)
+    thread.start()
+    return {"status": "scanning"}
+
+
+@router.get("/streak")
+def streak(months: int = Query(6)):
+    """Return daily request counts for calendar heatmap."""
+    db = SessionLocal()
+    try:
+        end = datetime.utcnow()
+        start = end - timedelta(days=30 * months)
+
+        rows = (
+            db.query(Request)
+            .filter(Request.timestamp >= start)
+            .with_entities(
+                func.strftime("%Y-%m-%d", Request.timestamp).label("day"),
+                func.count(Request.id).label("count"),
+            )
+            .group_by("day")
+            .all()
+        )
+
+        counts = {r.day: r.count for r in rows}
+        max_count = max(counts.values()) if counts else 1
+
+        return {
+            "start": start.date().isoformat(),
+            "end": end.date().isoformat(),
+            "days": [
+                {"date": day, "count": counts.get(day, 0)}
+                for day in _date_range(start.date(), end.date())
+            ],
+            "max_count": max_count,
+        }
+    finally:
+        db.close()
+
+
+def _date_range(start, end):
+    current = start
+    while current <= end:
+        yield current.isoformat()
+        current += timedelta(days=1)
 
 
 def _apply_range(q, range: str):

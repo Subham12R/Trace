@@ -9,10 +9,14 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
-        serif: ['Playfair Display', 'Georgia', 'serif'],
+        sans: ['Helvetica Trace', 'Helvetica Neue', 'Helvetica', 'Arial', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['Helvetica Trace', 'Helvetica Neue', 'Helvetica', 'Arial', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       colors: {
+        ink: 'rgba(var(--app-ink-rgb), <alpha-value>)',
+        canvas: 'rgba(var(--app-canvas-rgb), <alpha-value>)',
+        soft: 'rgba(var(--app-soft-rgb), <alpha-value>)',
+        hairline: 'rgba(var(--app-hairline-rgb), <alpha-value>)',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

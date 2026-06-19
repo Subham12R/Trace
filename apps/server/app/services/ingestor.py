@@ -11,6 +11,8 @@ from app.parsers.opencode import OpenCodeParser
 from app.parsers.gemini import GeminiParser
 from app.parsers.copilot import CopilotParser
 from app.parsers.ollama import OllamaParser
+from app.parsers.cursor import CursorParser
+from app.parsers.antigravity import AntigravityParser
 from app.parsers.generic import GenericJsonParser
 from app.services.pricing import calculate_cost
 
@@ -21,6 +23,8 @@ PARSERS = {
     "gemini": GeminiParser(),
     "copilot": CopilotParser(),
     "ollama": OllamaParser(),
+    "cursor": CursorParser(),
+    "antigravity": AntigravityParser(),
     # Generic parsers for tools with similar JSON structures
     "amp": GenericJsonParser("amp"),
     "droid": GenericJsonParser("droid"),
@@ -51,8 +55,12 @@ def ingest_file(source: str, file_path: Path):
         if not parser or not parser.can_parse(file_path):
             return
 
+        # Avoid duplicates on re-ingest: remove previous records from this file.
+        db.query(Request).filter_by(source_file=str(file_path)).delete(synchronize_session=False)
+
         for record in parser.parse(file_path):
             record["source"] = source
+            record["source_file"] = str(file_path)
             record["cost"] = calculate_cost(
                 record.get("model"),
                 record.get("input_tokens", 0),

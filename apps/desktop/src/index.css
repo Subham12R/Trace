@@ -2,36 +2,116 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Local fonts ─────────────────────────────────────────── */
+@font-face {
+  font-family: "Playfair Display";
+  src: url("/fonts/playfair.ttf") format("truetype");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Helvetica Trace";
+  src: url("/fonts/Helvetica.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
-    --background: 40 20% 98%;
-    --foreground: 30 10% 12%;
-    --card: 40 15% 96%;
-    --card-foreground: 30 10% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 10% 12%;
-    --primary: 30 25% 30%;
-    --primary-foreground: 40 20% 98%;
-    --secondary: 35 15% 93%;
-    --secondary-foreground: 30 10% 12%;
-    --muted: 35 10% 90%;
-    --muted-foreground: 30 8% 45%;
-    --accent: 30 30% 50%;
-    --accent-foreground: 40 20% 98%;
+    --background: 40 33% 98%;
+    --foreground: 0 0% 9%;
+    --card: 40 33% 98%;
+    --card-foreground: 0 0% 9%;
+    --popover: 40 33% 98%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 40 33% 98%;
+    --secondary: 40 20% 94%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 40 14% 90%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 0% 9%;
+    --accent-foreground: 40 33% 98%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 35 15% 88%;
-    --input: 35 15% 88%;
-    --ring: 30 25% 30%;
-    --radius: 0.625rem;
-    --sidebar-background: 40 20% 97%;
-    --sidebar-foreground: 30 10% 12%;
-    --sidebar-primary: 30 25% 30%;
-    --sidebar-primary-foreground: 40 20% 98%;
-    --sidebar-accent: 35 15% 93%;
-    --sidebar-accent-foreground: 30 10% 12%;
-    --sidebar-border: 35 15% 90%;
-    --sidebar-ring: 30 25% 30%;
+    --border: 40 10% 86%;
+    --input: 40 10% 86%;
+    --ring: 0 0% 9%;
+    --radius: 0.75rem;
+    --sidebar-background: 40 33% 98%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 0 0% 9%;
+    --sidebar-primary-foreground: 40 33% 98%;
+    --sidebar-accent: 40 20% 94%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 40 10% 88%;
+    --sidebar-ring: 0 0% 9%;
+
+    /* Custom app tokens */
+    --app-ink: #171717;
+    --app-canvas: #fffbf7;
+    --app-soft: #f5f2ef;
+    --app-hairline: #e5e2df;
+    --app-muted: #6b6b6b;
+    --app-info: #2563eb;
+    --app-success: #22c55e;
+
+    /* RGB components for Tailwind opacity support */
+    --app-ink-rgb: 23, 23, 23;
+    --app-canvas-rgb: 255, 251, 247;
+    --app-soft-rgb: 245, 242, 239;
+    --app-hairline-rgb: 229, 226, 223;
+    --app-muted-rgb: 107, 107, 107;
+    --app-info-rgb: 37, 99, 235;
+    --app-success-rgb: 34, 197, 94;
+  }
+
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 96%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 0 0% 96%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 0 0% 96%;
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 0 0% 96%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 0 0% 96%;
+
+    --app-ink: #f5f5f5;
+    --app-canvas: #0a0a0a;
+    --app-soft: #141414;
+    --app-hairline: #262626;
+    --app-muted: #888888;
+    --app-info: #3b82f6;
+    --app-success: #4ade80;
+
+    --app-ink-rgb: 245, 245, 245;
+    --app-canvas-rgb: 10, 10, 10;
+    --app-soft-rgb: 20, 20, 20;
+    --app-hairline-rgb: 38, 38, 38;
+    --app-muted-rgb: 136, 136, 136;
+    --app-info-rgb: 59, 130, 246;
+    --app-success-rgb: 74, 222, 128;
   }
 }
 
@@ -39,28 +119,97 @@
   * {
     @apply border-border;
   }
+  html {
+    font-family: "Helvetica Trace", "Helvetica Neue", Helvetica, Arial, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: var(--app-canvas);
+    color: var(--app-ink);
+    transition: background-color 200ms ease, color 200ms ease;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: "Helvetica Trace", "Helvetica Neue", Helvetica, Arial, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     letter-spacing: -0.02em;
+    font-weight: 600;
   }
 }
 
-@font-face {
-  font-family: 'Playfair Display';
-  src: url('/fonts/playfair.ttf') format('truetype');
-  font-weight: 400 900;
-  font-style: normal;
-  font-display: swap;
+/* macOS-style subtle scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.25);
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.35);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
-@font-face {
-  font-family: 'Helvetica Neue';
-  src: url('/fonts/Helvetica.ttf') format('truetype');
-  font-weight: 400 700;
-  font-style: normal;
-  font-display: swap;
+@layer utilities {
+  .app-surface {
+    background-color: var(--app-canvas);
+  }
+  .app-card {
+    background-color: var(--app-soft);
+    border-radius: 0.875rem;
+  }
+  .app-hairline {
+    border-color: var(--app-hairline);
+  }
+  .font-display {
+    font-family: "Helvetica Trace", "Helvetica Neue", Helvetica, Arial, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  /* Dark hero band used on Dashboard + Profile headers */
+  .app-hero {
+    background-color: #171717;
+    background-image:
+      radial-gradient(120% 120% at 85% -10%, rgba(255, 251, 247, 0.10) 0%, transparent 55%),
+      radial-gradient(90% 90% at 0% 110%, rgba(255, 251, 247, 0.06) 0%, transparent 60%);
+  }
+  .dark .app-hero {
+    background-color: #111111;
+    background-image:
+      radial-gradient(120% 120% at 85% -10%, rgba(255, 255, 255, 0.08) 0%, transparent 55%),
+      radial-gradient(90% 90% at 0% 110%, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
+  }
+  .card-elevate {
+    transition: transform 200ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+      box-shadow 200ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+      border-color 200ms ease;
+  }
+  .card-elevate:hover {
+    border-color: var(--app-hairline);
+    box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.45), 0 8px 24px -12px rgba(0, 0, 0, 0.18);
+  }
+  .dark .card-elevate:hover {
+    border-color: #333333;
+    box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.04), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  }
+  .card-depth {
+    border-width: 2px;
+    box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.35);
+  }
+  .dark .card-depth {
+    box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.05);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
 }

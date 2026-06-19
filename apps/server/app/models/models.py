@@ -19,7 +19,9 @@ class Request(Base):
     cache_write_tokens = Column(Integer, nullable=False, default=0)
     cost = Column(Float, nullable=False, default=0.0)
     project = Column(String, nullable=True)
+    branch = Column(String, nullable=True)
     latency_ms = Column(Integer, nullable=True)
+    source_file = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

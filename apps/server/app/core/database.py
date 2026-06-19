@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 DB_PATH = Path(os.environ.get("TRACE_DB_PATH", "~/.trace/metrics.db")).expanduser()
@@ -19,6 +19,17 @@ def get_db():
         db.close()
 
 
+def _migrate_columns():
+    """Add any columns that are missing from an existing SQLite database."""
+    with engine.connect() as conn:
+        result = conn.execute(text("PRAGMA table_info(requests)"))
+        columns = {row[1] for row in result.fetchall()}
+        if "branch" not in columns:
+            conn.execute(text("ALTER TABLE requests ADD COLUMN branch VARCHAR"))
+            conn.commit()
+
+
 def init_db():
     from app.models.models import Base as ModelsBase
     ModelsBase.metadata.create_all(bind=engine)
+    _migrate_columns()

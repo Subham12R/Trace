@@ -4,6 +4,7 @@ from typing import Iterator, Dict, Any
 from datetime import datetime
 
 from app.parsers.base import BaseParser
+from app.core.git import get_branch
 
 
 class CodexParser(BaseParser):
@@ -34,6 +35,7 @@ class CodexParser(BaseParser):
     def _normalize(self, record: dict) -> dict:
         usage = record.get("usage") or {}
         ts = record.get("timestamp") or record.get("created_at")
+        project = record.get("project") or record.get("cwd")
         return {
             "session_id": record.get("session_id") or record.get("conversation_id"),
             "timestamp": self._parse_ts(ts) if ts else datetime.utcnow(),
@@ -42,7 +44,8 @@ class CodexParser(BaseParser):
             "output_tokens": usage.get("completion_tokens", 0) or usage.get("output_tokens", 0),
             "cache_read_tokens": usage.get("cache_read_tokens", 0),
             "cache_write_tokens": usage.get("cache_write_tokens", 0),
-            "project": record.get("project") or record.get("cwd"),
+            "project": project,
+            "branch": get_branch(project),
             "latency_ms": record.get("latency_ms"),
         }
 
@@ -51,7 +54,11 @@ class CodexParser(BaseParser):
             return datetime.utcfromtimestamp(ts)
         if isinstance(ts, str):
             try:
-                return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                if dt.tzinfo is not None:
+                    dt = dt.replace(tzinfo=None)
+                return dt
             except ValueError:
                 pass
         return datetime.utcnow()
+

@@ -4,7 +4,7 @@ export const LogoIcon = (props: React.ComponentProps<"img">) => (
 	<img
 		src="/images/icon.png"
 		alt="Trace"
-		className="size-6 object-contain"
+		className="size-8 object-contain"
 		{...props}
 	/>
 );

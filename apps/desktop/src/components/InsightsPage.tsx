@@ -1,8 +1,20 @@
 import { useState } from "react";
-import { useMetrics, useProviders, useActiveSessions } from "@/hooks/useMetrics";
+import { useMetrics, useProviders, useActiveSessions, useModels, useSessions } from "@/hooks/useMetrics";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { cn } from "@/lib/utils";
-import { AlertCircle, Zap, MessageSquare, Cpu, TrendingUp } from "lucide-react";
+import { AlertCircle, MessageSquare, Cpu, TrendingUp } from "lucide-react";
+import { ProviderBarChart } from "./ProviderBarChart";
+import { CostPieChart } from "./CostPieChart";
+import { QuotaSection } from "./QuotaSection";
+import { extractModelName } from "@/lib/modelName";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 
 export function InsightsPage() {
 	const [activeTab, setActiveTab] = useState<"usage" | "providers">("usage");
@@ -10,6 +22,8 @@ export function InsightsPage() {
 	const { data: metrics } = useMetrics(timeRange);
 	const { data: providers } = useProviders();
 	const { data: activeSessions } = useActiveSessions();
+	const { data: models } = useModels(timeRange);
+	const { data: providerSessions } = useSessions(timeRange, "providers");
 
 	const detectedProviders = providers?.filter((p) => p.installed) || [];
 
@@ -83,87 +97,112 @@ export function InsightsPage() {
 				/>
 			</div>
 
-			{/* Usage Breakdown */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+			{/* Provider Quotas */}
+			<div className="mb-8">
+				<QuotaSection />
+			</div>
+
+			{/* Charts */}
+			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 				{/* Provider Usage */}
 				<div className="bg-[#f5f3ef] rounded-xl p-6">
-					<div className="flex items-center justify-between mb-6">
+					<div className="flex items-center justify-between mb-4">
 						<h3 className="font-serif text-lg font-semibold text-[#2d2a26]">Provider Usage</h3>
 						<span className="text-xs text-[#6b6560] uppercase tracking-wider">
-							Total Apps Used | {detectedProviders.length}
+							{detectedProviders.length} detected
 						</span>
 					</div>
-
-					<div className="space-y-4">
-						{detectedProviders.length === 0 ? (
-							<p className="text-sm text-[#6b6560]">No providers detected yet.</p>
-						) : (
-							detectedProviders.map((provider) => (
-								<div key={provider.id}>
-									<div className="flex items-center justify-between mb-1.5">
-										<div className="flex items-center gap-2">
-											<Zap className="size-4 text-[#8b7355]" />
-											<span className="text-sm font-medium text-[#2d2a26] capitalize">
-												{provider.name}
-											</span>
-										</div>
-										<span className="text-xs text-[#6b6560]">
-											{provider.defaults[0]}
-										</span>
-									</div>
-									<div className="h-2 bg-[#e8e4df] rounded-full overflow-hidden">
-										<div
-											className="h-full bg-[#8b7355] rounded-full transition-all"
-											style={{ width: "100%" }}
-										/>
-									</div>
-								</div>
-							))
-						)}
-					</div>
+					<ProviderBarChart sessions={providerSessions} />
 				</div>
 
-				{/* Activity Calendar */}
+				{/* Cost Composition */}
 				<div className="bg-[#f5f3ef] rounded-xl p-6">
-					<div className="flex items-center justify-between mb-6">
-						<h3 className="font-serif text-lg font-semibold text-[#2d2a26]">
-							{activeSessions && activeSessions.length > 0 ? `${activeSessions.length} Active Session${activeSessions.length > 1 ? "s" : ""}` : "No Active Sessions"}
-						</h3>
+					<div className="flex items-center justify-between mb-4">
+						<h3 className="font-serif text-lg font-semibold text-[#2d2a26]">Cost Composition</h3>
 						<span className="text-xs text-[#6b6560] uppercase tracking-wider">
-							Real-time
+							By Model
 						</span>
 					</div>
+					<CostPieChart models={models} />
+				</div>
+			</div>
 
-					{activeSessions && activeSessions.length > 0 ? (
-						<div className="space-y-3">
-							{activeSessions.map((session) => (
-								<div
-									key={session.session_id}
-									className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#e8e4df]"
-								>
-									<div className="relative flex h-2.5 w-2.5">
-										<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-										<span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-									</div>
-									<div className="flex-1 min-w-0">
-										<p className="text-sm font-medium text-[#2d2a26] capitalize">
-											{session.source}
-										</p>
-										<p className="text-xs text-[#6b6560] truncate">
-											{session.model || "Unknown model"}
-										</p>
-									</div>
+			{/* Active Sessions */}
+			<div className="bg-[#f5f3ef] rounded-xl p-6 mb-8">
+				<div className="flex items-center justify-between mb-6">
+					<h3 className="font-helvetica text-lg font-semibold text-[#2d2a26]">
+						{activeSessions && activeSessions.length > 0 ? `${activeSessions.length} Active Session${activeSessions.length > 1 ? "s" : ""}` : "No Active Sessions"}
+					</h3>
+					<span className="text-xs text-[#6b6560] uppercase tracking-wider">Real-time</span>
+				</div>
+
+				{activeSessions && activeSessions.length > 0 ? (
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+						{activeSessions.map((session) => (
+							<div
+								key={session.session_id}
+								className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#e8e4df]"
+							>
+								<div className="relative flex h-2.5 w-2.5">
+									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+									<span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
 								</div>
-							))}
-						</div>
-					) : (
-						<div className="text-center py-8">
-							<p className="text-sm text-[#6b6560]">No active sessions detected</p>
-							<p className="text-xs text-[#8b8078] mt-1">
-								Start using your AI CLI tools to see activity here
-							</p>
-						</div>
-					)}
+								<div className="flex-1 min-w-0">
+									<p className="text-sm font-medium text-[#2d2a26] capitalize">{session.source}</p>
+									<p className="text-xs text-[#6b6560] truncate">{extractModelName(session.model)}</p>
+								</div>
+							</div>
+						))}
+					</div>
+				) : (
+					<div className="text-center py-8">
+						<p className="text-sm text-[#6b6560]">No active sessions detected</p>
+						<p className="text-xs text-[#8b8078] mt-1">Start using your AI CLI tools to see activity here</p>
+					</div>
+				)}
+			</div>
+
+			{/* Model Breakdown Table */}
+			<div className="bg-[#f5f3ef] rounded-xl p-6">
+				<div className="flex items-center justify-between mb-4">
+					<h3 className="font-helvetica text-lg font-semibold text-[#2d2a26]">Model Breakdown</h3>
+					<span className="text-xs text-[#6b6560] uppercase tracking-wider">
+						{models?.length || 0} models
+					</span>
+				</div>
+				<div className="bg-white rounded-lg border border-[#e8e4df] overflow-hidden">
+					<Table>
+						<TableHeader>
+							<TableRow className="hover:bg-transparent">
+								<TableHead className="text-[#6b6560]">Model</TableHead>
+								<TableHead className="text-[#6b6560]">Provider</TableHead>
+								<TableHead className="text-right text-[#6b6560]">Requests</TableHead>
+								<TableHead className="text-right text-[#6b6560]">Tokens</TableHead>
+								<TableHead className="text-right text-[#6b6560]">Cost</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{models && models.length > 0 ? (
+								models.map((m) => (
+									<TableRow key={`${m.source}-${extractModelName(m.model)}`}>
+										<TableCell className="font-medium text-[#2d2a26]">{extractModelName(m.model)}</TableCell>
+										<TableCell className="capitalize text-[#6b6560]">{m.source}</TableCell>
+										<TableCell className="text-right text-[#2d2a26]">{m.request_count.toLocaleString()}</TableCell>
+										<TableCell className="text-right text-[#2d2a26]">
+											{(m.input_tokens + m.output_tokens).toLocaleString()}
+										</TableCell>
+										<TableCell className="text-right text-[#2d2a26]">${m.cost.toFixed(2)}</TableCell>
+									</TableRow>
+								))
+							) : (
+								<TableRow>
+									<TableCell colSpan={5} className="text-center text-[#6b6560] py-8">
+										No model data available for this time range.
+									</TableCell>
+								</TableRow>
+							)}
+						</TableBody>
+					</Table>
 				</div>
 			</div>
 		</div>
@@ -184,14 +223,10 @@ function MetricCard({
 	return (
 		<div className="bg-[#f5f3ef] rounded-xl p-6">
 			<div className="flex items-center justify-between mb-4">
-				<span className="text-xs text-[#6b6560] uppercase tracking-wider font-medium">
-					{label}
-				</span>
+				<span className="text-xs text-[#6b6560] uppercase tracking-wider font-medium">{label}</span>
 				{icon}
 			</div>
-			<div className="text-4xl font-serif font-semibold text-[#2d2a26] tracking-tight">
-				{value}
-			</div>
+			<div className="text-4xl  font-semibold text-[#2d2a26] tracking-tight">{value}</div>
 			<p className="text-xs text-[#8b8078] mt-2">{subtitle}</p>
 		</div>
 	);

@@ -1,7 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useProviders, useAuthStatus, connectProvider, disconnectProvider } from "@/hooks/useMetrics";
-import { CheckCircle, XCircle, Folder, Cloud, Lock, Eye, EyeOff } from "lucide-react";
+import { XCircle, Folder, Cloud, Lock, Eye, EyeOff } from "lucide-react";
+import { ProviderLogo } from "./ProviderLogo";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -24,44 +25,44 @@ export function SettingsPage() {
 	const queryClient = useQueryClient();
 
 	return (
-		<div className="p-8 max-w-6xl">
-			<div className="mb-8">
-				<h1 className="font-serif text-2xl font-semibold text-[#2d2a26]">Settings</h1>
-				<p className="text-sm text-[#6b6560] mt-1">Configure providers and cloud sync</p>
+		<div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+			<div className="mb-6 lg:mb-8">
+				<h1 className="text-xl sm:text-2xl font-semibold text-[var(--app-ink)]">Settings</h1>
+				<p className="text-sm text-[var(--app-muted)] mt-1">Configure providers and cloud sync</p>
 			</div>
 
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 				{/* Local Providers */}
-				<Card className="border-[#e8e4df] bg-white">
+				<Card className="border-2 border-[var(--app-hairline)] bg-[var(--app-soft)] p-4 rounded-[14px] card-depth">
 					<CardHeader>
-						<CardTitle className="font-serif text-lg">Local Providers</CardTitle>
-						<CardDescription>AI CLI tools detected on your system</CardDescription>
+						<CardTitle className="text-lg font-semibold text-[var(--app-ink)]">Local Providers</CardTitle>
+						<CardDescription className="text-[var(--app-muted)]">AI CLI tools detected on your system</CardDescription>
 					</CardHeader>
-					<CardContent className="flex flex-col gap-2">
+					<CardContent className="flex flex-col gap-2 mt-4">
 						{isLoading ? (
-							<p className="text-sm text-[#6b6560]">Scanning...</p>
+							<p className="text-sm text-[var(--app-muted)]">Scanning...</p>
 						) : (
 							providers?.map((provider) => (
 								<div
 									key={provider.id}
-									className="flex items-center justify-between p-3 rounded-lg border border-[#f0ece6] hover:bg-[#faf9f7] transition-colors"
+									className="flex items-center justify-between p-3 rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)] hover:bg-[var(--app-soft)] transition-colors animate-fade-in"
 								>
 									<div className="flex items-center gap-3">
 										{provider.installed ? (
-											<CheckCircle className="size-4 text-emerald-600" />
+											<ProviderLogo provider={provider} size="sm" />
 										) : (
-											<XCircle className="size-4 text-[#c4bdb5]" />
+											<XCircle className="size-4 text-[var(--app-muted)]/65" />
 										)}
 										<div>
 											<div className="flex items-center gap-2">
-												<span className="text-sm font-medium text-[#2d2a26]">{provider.name}</span>
+												<span className="text-sm font-medium text-[var(--app-ink)]">{provider.name}</span>
 												{provider.installed ? (
-													<Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[10px]">Detected</Badge>
+													<Badge className="bg-[var(--app-ink)] text-[var(--app-canvas)] hover:bg-[var(--app-ink)] text-[10px]">Detected</Badge>
 												) : (
-													<Badge variant="secondary" className="text-[#9a9590] text-[10px]">Not Found</Badge>
+													<Badge variant="secondary" className="bg-[var(--app-soft)] text-[var(--app-muted)] text-[10px]">Not Found</Badge>
 												)}
 											</div>
-											<div className="flex items-center gap-1 text-[11px] text-[#9a9590] mt-0.5">
+											<div className="flex items-center gap-1 text-[11px] text-[var(--app-muted)] mt-0.5">
 												<Folder className="size-3" />
 												{provider.defaults[0]}
 											</div>
@@ -74,24 +75,24 @@ export function SettingsPage() {
 				</Card>
 
 				{/* Cloud Sync */}
-				<Card className="border-[#e8e4df] bg-white">
+				<Card className="border-2 border-[var(--app-hairline)] bg-[var(--app-soft)] p-4 rounded-[14px] card-depth">
 					<CardHeader>
-						<CardTitle className="font-serif text-lg">Cloud Sync</CardTitle>
-						<CardDescription>Connect accounts for real-time usage data</CardDescription>
+						<CardTitle className="text-lg font-semibold text-[var(--app-ink)]">Cloud Sync</CardTitle>
+						<CardDescription className="text-[var(--app-muted)]">Connect accounts for real-time usage data</CardDescription>
 					</CardHeader>
-					<CardContent className="flex flex-col gap-3">
-						<div className="p-4 bg-[#f5f3ef] rounded-lg">
+					<CardContent className="flex flex-col gap-3 mt-4">
+						<div className="p-4 bg-[var(--app-canvas)] border border-[var(--app-hairline)] rounded-[10px]">
 							<div className="flex items-center gap-2 mb-2">
-								<Lock className="size-4 text-[#8b7355]" />
-								<span className="text-sm font-medium text-[#2d2a26]">Secure Storage</span>
+								<Lock className="size-4 text-[var(--app-ink)]" />
+								<span className="text-sm font-medium text-[var(--app-ink)]">Secure Storage</span>
 							</div>
-							<p className="text-xs text-[#6b6560]">
-								API keys are stored securely in your OS keychain. Claude Code usage requires cloud sync because Pro accounts do not store token counts locally.
+							<p className="text-xs text-[var(--app-muted)]">
+								API keys are stored securely in your OS keychain. Claude Code usage can also be synced via OAuth credentials.
 							</p>
 						</div>
 
 						{authLoading ? (
-							<p className="text-sm text-[#6b6560]">Loading...</p>
+							<p className="text-sm text-[var(--app-muted)]">Loading...</p>
 						) : (
 							CLOUD_PROVIDERS.map((provider) => (
 								<CloudProviderCard
@@ -145,19 +146,19 @@ function CloudProviderCard({
 	};
 
 	return (
-		<div className="p-4 rounded-lg border border-[#f0ece6]">
+		<div className="p-4 rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)]">
 			<div className="flex items-start justify-between mb-3">
 				<div className="flex items-center gap-3">
-					<Cloud className="size-4 text-[#8b7355]" />
+					<Cloud className="size-4 text-[var(--app-ink)]" />
 					<div>
-						<p className="text-sm font-medium text-[#2d2a26]">{provider.name}</p>
-						<p className="text-[11px] text-[#9a9590]">{provider.description}</p>
+						<p className="text-sm font-medium text-[var(--app-ink)]">{provider.name}</p>
+						<p className="text-[11px] text-[var(--app-muted)]">{provider.description}</p>
 					</div>
 				</div>
 				{connected ? (
-					<Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[10px]">Connected</Badge>
+					<Badge className="bg-[var(--app-ink)] text-[var(--app-canvas)] hover:bg-[var(--app-ink)] text-[10px]">Connected</Badge>
 				) : (
-					<Badge variant="secondary" className="text-[#9a9590] text-[10px]">Disconnected</Badge>
+					<Badge variant="secondary" className="bg-[var(--app-soft)] text-[var(--app-muted)] text-[10px]">Disconnected</Badge>
 				)}
 			</div>
 
@@ -165,7 +166,7 @@ function CloudProviderCard({
 				<button
 					onClick={handleDisconnect}
 					disabled={isSubmitting}
-					className="px-3 py-1.5 text-xs rounded-md font-medium bg-[#f0ece6] text-[#6b6560] hover:bg-[#e8e4df] transition-colors disabled:opacity-50"
+					className="px-3 py-1.5 text-xs rounded-full font-medium bg-[var(--app-soft)] text-[var(--app-ink)] hover:bg-[var(--app-hairline)] transition-colors disabled:opacity-50"
 				>
 					{isSubmitting ? "Disconnecting..." : "Disconnect"}
 				</button>
@@ -177,12 +178,12 @@ function CloudProviderCard({
 							value={key}
 							onChange={(e) => setKey(e.target.value)}
 							placeholder={`Enter ${provider.name} API key`}
-							className="w-full px-3 py-1.5 pr-8 text-xs rounded-md border border-[#e8e4df] bg-white text-[#2d2a26] placeholder:text-[#b5afa8] focus:outline-none focus:border-[#8b7355]"
+							className="w-full px-3 py-1.5 pr-8 text-xs rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)] text-[var(--app-ink)] placeholder:text-[var(--app-muted)]/60 focus:outline-none focus:border-[var(--app-ink)]"
 						/>
 						<button
 							type="button"
 							onClick={() => setShowKey(!showKey)}
-							className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9a9590] hover:text-[#6b6560]"
+							className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
 						>
 							{showKey ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
 						</button>
@@ -190,7 +191,7 @@ function CloudProviderCard({
 					<button
 						onClick={handleConnect}
 						disabled={isSubmitting || !key.trim()}
-						className="px-3 py-1.5 text-xs rounded-md font-medium bg-[#8b7355] text-white hover:bg-[#7a6548] transition-colors disabled:opacity-50"
+						className="px-4 py-1.5 text-xs rounded-full font-medium bg-[var(--app-ink)] text-[var(--app-canvas)] hover:bg-[var(--app-ink)]/90 transition-colors disabled:opacity-50"
 					>
 						{isSubmitting ? "Connecting..." : "Connect"}
 					</button>

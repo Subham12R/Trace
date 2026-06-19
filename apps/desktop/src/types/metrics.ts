@@ -21,6 +21,20 @@ export interface MetricsSummary {
   cache_read_tokens: number
   cache_write_tokens: number
   cache_hit_rate: number
+  session_count: number
+}
+
+export interface ProjectUsage {
+  branch: string
+  project: string
+  source: string
+  request_count: number
+  input_tokens: number
+  output_tokens: number
+  cache_read_tokens: number
+  cache_write_tokens: number
+  cost: number
+  session_count: number
 }
 
 export interface TrendPoint {

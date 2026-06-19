@@ -11,6 +11,7 @@ class MetricsSummary(BaseModel):
     cache_read_tokens: int
     cache_write_tokens: int
     cache_hit_rate: float
+    session_count: int
 
 
 class TrendPoint(BaseModel):

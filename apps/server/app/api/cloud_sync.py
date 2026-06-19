@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query
 from typing import Optional
 
-from app.services.cloud_sync import fetch_anthropic_usage, fetch_opencode_cloud_usage
+from app.services.cloud_sync import fetch_anthropic_usage, fetch_claude_oauth_usage, fetch_opencode_cloud_usage
 
 router = APIRouter()
 
@@ -17,6 +17,17 @@ def anthropic_usage(
         "provider": "anthropic",
         "data": data,
         "count": len(data),
+    }
+
+
+@router.get("/claude")
+def claude_oauth_usage():
+    """Fetch real Claude Code quota via its OAuth session."""
+    data = fetch_claude_oauth_usage()
+    return {
+        "provider": "claude-oauth",
+        "data": data,
+        "connected": data is not None,
     }
 
 

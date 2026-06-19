@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
-import { AppSidebar } from "@/components/app-sidebar";
-import { InsightsPage } from "@/components/InsightsPage";
-import { ActivityPage } from "@/components/ActivityPage";
+import { HomePage } from "@/components/HomePage";
+import { DetailedAnalysisPage } from "@/components/DetailedAnalysisPage";
+import { ProviderAnalysisPage } from "@/components/ProviderAnalysisPage";
 import { SettingsPage } from "@/components/SettingsPage";
-
-function getHash() {
-	return window.location.hash.replace("#", "") || "home";
-}
+import { ProfilePage } from "@/components/ProfilePage";
+import { CustomizePage } from "@/components/CustomizePage";
+import { OnboardingPage, isOnboarded } from "@/components/OnboardingPage";
+import { getHash } from "@/components/app-shared";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function App() {
 	const [page, setPage] = useState(getHash());
+	const [onboarded, setOnboarded] = useState(isOnboarded());
 
 	useEffect(() => {
 		const handleHashChange = () => setPage(getHash());
@@ -18,20 +20,40 @@ export default function App() {
 		return () => window.removeEventListener("hashchange", handleHashChange);
 	}, []);
 
+	const renderPage = () => {
+		switch (page) {
+			case "home":
+			case "dashboard":
+				return <HomePage />;
+			case "details":
+			case "analysis":
+				return <DetailedAnalysisPage />;
+		case "providers":
+			return <ProviderAnalysisPage />;
+		case "customize":
+			return <CustomizePage />;
+		case "settings":
+			return <SettingsPage />;
+		case "profile":
+			return <ProfilePage />;
+		default:
+			return <HomePage />;
+		}
+	};
+
+	if (!onboarded) {
+		return (
+			<>
+				<OnboardingPage onComplete={() => setOnboarded(true)} />
+				<Toaster />
+			</>
+		);
+	}
+
 	return (
-		<AppShell>
-			<div className="flex">
-				<AppSidebar />
-				<main className="flex-1 ml-[220px] min-h-screen">
-					{page === "home" || page === "dashboard" ? (
-						<InsightsPage />
-					) : page === "insights" || page === "activity" ? (
-						<ActivityPage />
-					) : (
-						<SettingsPage />
-					)}
-				</main>
-			</div>
-		</AppShell>
+		<>
+			<AppShell>{renderPage()}</AppShell>
+			<Toaster />
+		</>
 	);
 }
