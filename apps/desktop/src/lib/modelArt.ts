@@ -17,36 +17,37 @@ interface ArtRule {
 }
 
 const NEUTRAL = "#171717";
+const B = import.meta.env.BASE_URL;
 
 /** Matched against the lowercased model name, in order. First hit wins. */
 const MODEL_RULES: ArtRule[] = [
-	{ test: /(claude|anthropic|sonnet|opus|haiku)/, src: "/logos/claude.png", accent: "#d97757", family: "Anthropic" },
-	{ test: /(gpt|chatgpt|davinci|codex|^o[1-9]|-o[1-9]|openai)/, src: "/logos/openai.svg", accent: "#10a37f", family: "OpenAI" },
-	{ test: /(gemini)/, src: "/logos/gemini.svg", accent: "#4285f4", family: "Gemini" },
-	{ test: /(gemma)/, src: "/logos/gemma.png", accent: "#f2a900", family: "Gemma" },
-	{ test: /(kimi|moonshot)/, src: "/logos/kimi.png", accent: "#ff9d00", family: "Moonshot" },
-	{ test: /(llama|meta-)/, src: "/logos/meta.svg", accent: "#0467df", family: "Meta" },
-	{ test: /(mistral|mixtral|codestral|ministral)/, src: "/logos/mistral.svg", accent: "#fa520f", family: "Mistral" },
-	{ test: /(deepseek)/, src: "/logos/deepseek.svg", accent: "#4d6bfe", family: "DeepSeek" },
-	{ test: /(qwen|tongyi)/, src: "/logos/qwen.png", accent: "#615ced", family: "Qwen" },
-	{ test: /(grok|xai)/, src: "/logos/xai.svg", accent: NEUTRAL, family: "xAI" },
-	{ test: /(perplexity|sonar)/, src: "/logos/perplexity.svg", accent: "#20808d", family: "Perplexity" },
-	{ test: /(copilot)/, src: "/logos/github.svg", accent: "#6e40c9", family: "Copilot" },
-	{ test: /(cursor)/, src: "/logos/cursor.png", accent: "#00bcd4", family: "Cursor" },
-	{ test: /(antigravity)/, src: "/logos/antigravity.jpg", accent: "#34a853", family: "Antigravity" },
+	{ test: /(claude|anthropic|sonnet|opus|haiku)/, src: `${B}logos/claude.png`, accent: "#d97757", family: "Anthropic" },
+	{ test: /(gpt|chatgpt|davinci|codex|^o[1-9]|-o[1-9]|openai)/, src: `${B}logos/openai.svg`, accent: "#10a37f", family: "OpenAI" },
+	{ test: /(gemini)/, src: `${B}logos/gemini.svg`, accent: "#4285f4", family: "Gemini" },
+	{ test: /(gemma)/, src: `${B}logos/gemma.png`, accent: "#f2a900", family: "Gemma" },
+	{ test: /(kimi|moonshot)/, src: `${B}logos/kimi.png`, accent: "#ff9d00", family: "Moonshot" },
+	{ test: /(llama|meta-)/, src: `${B}logos/meta.svg`, accent: "#0467df", family: "Meta" },
+	{ test: /(mistral|mixtral|codestral|ministral)/, src: `${B}logos/mistral.svg`, accent: "#fa520f", family: "Mistral" },
+	{ test: /(deepseek)/, src: `${B}logos/deepseek.svg`, accent: "#4d6bfe", family: "DeepSeek" },
+	{ test: /(qwen|tongyi)/, src: `${B}logos/qwen.png`, accent: "#615ced", family: "Qwen" },
+	{ test: /(grok|xai)/, src: `${B}logos/xai.svg`, accent: NEUTRAL, family: "xAI" },
+	{ test: /(perplexity|sonar)/, src: `${B}logos/perplexity.svg`, accent: "#20808d", family: "Perplexity" },
+	{ test: /(copilot)/, src: `${B}logos/github.svg`, accent: "#6e40c9", family: "Copilot" },
+	{ test: /(cursor)/, src: `${B}logos/cursor.png`, accent: "#00bcd4", family: "Cursor" },
+	{ test: /(antigravity)/, src: `${B}logos/antigravity.jpg`, accent: "#34a853", family: "Antigravity" },
 ];
 
 /** Fallback by provider/source id when the model name carries no family signal. */
 const SOURCE_RULES: Record<string, ArtRule> = {
-	claude: { test: /./, src: "/logos/claude.png", accent: "#d97757", family: "Anthropic" },
-	codex: { test: /./, src: "/logos/openai.svg", accent: "#10a37f", family: "OpenAI" },
-	copilot: { test: /./, src: "/logos/github.svg", accent: "#6e40c9", family: "Copilot" },
-	gemini: { test: /./, src: "/logos/gemini.svg", accent: "#4285f4", family: "Gemini" },
-	ollama: { test: /./, src: "/logos/ollama.svg", accent: NEUTRAL, family: "Ollama" },
-	qwen: { test: /./, src: "/logos/qwen.png", accent: "#615ced", family: "Qwen" },
-	kimi: { test: /./, src: "/logos/kimi.png", accent: "#ff9d00", family: "Moonshot" },
-	cursor: { test: /./, src: "/logos/cursor.png", accent: "#00bcd4", family: "Cursor" },
-	antigravity: { test: /./, src: "/logos/antigravity.jpg", accent: "#34a853", family: "Antigravity" },
+	claude: { test: /./, src: `${B}logos/claude.png`, accent: "#d97757", family: "Anthropic" },
+	codex: { test: /./, src: `${B}logos/openai.svg`, accent: "#10a37f", family: "OpenAI" },
+	copilot: { test: /./, src: `${B}logos/github.svg`, accent: "#6e40c9", family: "Copilot" },
+	gemini: { test: /./, src: `${B}logos/gemini.svg`, accent: "#4285f4", family: "Gemini" },
+	ollama: { test: /./, src: `${B}logos/ollama.svg`, accent: NEUTRAL, family: "Ollama" },
+	qwen: { test: /./, src: `${B}logos/qwen.png`, accent: "#615ced", family: "Qwen" },
+	kimi: { test: /./, src: `${B}logos/kimi.png`, accent: "#ff9d00", family: "Moonshot" },
+	cursor: { test: /./, src: `${B}logos/cursor.png`, accent: "#00bcd4", family: "Cursor" },
+	antigravity: { test: /./, src: `${B}logos/antigravity.jpg`, accent: "#34a853", family: "Antigravity" },
 };
 
 const DEFAULT_ART: ModelArt = { src: null, accent: NEUTRAL, family: "Model" };

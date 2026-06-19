@@ -64,7 +64,7 @@ export function AppSidebar() {
 		<Sidebar collapsible="icon" className="border-r border-[var(--app-hairline)] bg-[var(--app-canvas)]">
 			<SidebarHeader className="py-5">
 				<div className="flex items-center gap-2.5 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-					<img src="/images/icon.png" alt="Trace" className="size-10 group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:ml-2 object-contain bg-[#111]/20 rounded-xl shrink-0" />
+					<img src={`${import.meta.env.BASE_URL}images/icon.png`} alt="Trace" className="size-10 group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:ml-2 object-contain bg-[#111]/20 rounded-xl shrink-0" />
 					
 					<div className="flex flex-col leading-[1.1]">
 								<span className="text-xl font-semibold tracking-tight text-[var(--app-ink)] group-data-[collapsible=icon]:hidden">

@@ -40,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 					<div className="flex items-center gap-2">
 						<SidebarTrigger className="text-[var(--app-muted)] hover:text-[var(--app-ink)]" />
 						<div className="lg:hidden flex items-center gap-2">
-							<img src="/images/icon.png" alt="Trace" className="size-6 rounded-md" />
+							<img src={`${import.meta.env.BASE_URL}images/icon.png`} alt="Trace" className="size-6 rounded-md" />
 							<span className="text-base font-semibold text-[var(--app-ink)]">Trace</span>
 						</div>
 					</div>

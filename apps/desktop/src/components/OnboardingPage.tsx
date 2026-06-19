@@ -77,7 +77,7 @@ export function OnboardingPage({ onComplete }: { onComplete: () => void }) {
 					"absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700",
 					step === "intro" ? "scale-100" : "scale-105 blur-md brightness-75"
 				)}
-				style={{ backgroundImage: "url(/images/banner.png)" }}
+				style={{ backgroundImage: `url(${import.meta.env.BASE_URL}images/banner.png)` }}
 			/>
 
 			{/* Dark overlay for text legibility on intro */}
