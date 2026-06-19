@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu } from 'electron'
 import { spawn } from 'child_process'
 import * as path from 'path'
 import * as os from 'os'
+import * as http from 'http'
 
 let mainWindow: BrowserWindow | null = null
 let serverProcess: ReturnType<typeof spawn> | null = null
@@ -78,11 +79,27 @@ function stopServer() {
   }
 }
 
-app.whenReady().then(() => {
+function waitForServer(port: number, timeoutMs = 20000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const start = Date.now()
+    const check = () => {
+      http.get(`http://localhost:${port}/health`, (res) => {
+        if (res.statusCode === 200) return resolve()
+        retry()
+      }).on('error', retry)
+    }
+    const retry = () => {
+      if (Date.now() - start > timeoutMs) return reject(new Error('Server did not start'))
+      setTimeout(check, 300)
+    }
+    check()
+  })
+}
+
+app.whenReady().then(async () => {
   startServer()
-  // Give server a moment to boot in production
-  const delay = isDev ? 0 : 800
-  setTimeout(createWindow, delay)
+  if (!isDev) await waitForServer(SERVER_PORT)
+  createWindow()
 })
 
 app.on('window-all-closed', () => {
