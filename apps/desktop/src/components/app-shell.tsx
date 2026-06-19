@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { useThemeStore } from "@/stores/themeStore";
 import { ThemeToggle } from "./ThemeToggle";
 import { RefreshButton } from "./RefreshButton";
+import { UpdateBanner } from "./UpdateBanner";
 
 const ACCENT_GLOWS: Record<string, string> = {
 	ink: "from-neutral-500/[0.04] via-transparent to-neutral-700/[0.04] dark:from-neutral-900/15 dark:to-neutral-950/15",
@@ -49,6 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 						<ThemeToggle compact />
 					</div>
 				</header>
+				<UpdateBanner />
 				<div className="min-h-[calc(100svh-3.5rem)] relative z-10">{children}</div>
 			</SidebarInset>
 		</SidebarProvider>
