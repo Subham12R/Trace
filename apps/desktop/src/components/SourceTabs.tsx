@@ -1,4 +1,3 @@
-import React from 'react'
 import { useDashboardStore } from '@/stores/dashboardStore'
 import type { SourceView } from '@/types/metrics'
 

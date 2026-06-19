@@ -1,4 +1,3 @@
-import React from 'react'
 import type { MetricsSummary } from '@/types/metrics'
 
 interface MetricCardProps {

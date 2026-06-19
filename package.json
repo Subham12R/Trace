@@ -4,10 +4,12 @@
   "private": true,
   "description": "Local-first AI CLI usage dashboard",
   "scripts": {
-    "dev:desktop": "cd apps/desktop && pnpm dev",
-    "build:desktop": "cd apps/desktop && pnpm build",
-    "dev:server": "cd apps/server && python start.py",
-    "lint": "cd apps/desktop && pnpm lint"
+    "dev": "node dev.js",
+    "dev:desktop": "cd apps/desktop && npm run dev",
+    "dev:electron": "cd apps/desktop && npm run electron:dev",
+    "dev:server": "cd apps/server && py -3.12 start.py",
+    "build:desktop": "cd apps/desktop && npm run build",
+    "lint": "cd apps/desktop && npm run lint"
   },
   "workspaces": [
     "apps/*"

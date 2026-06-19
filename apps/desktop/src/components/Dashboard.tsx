@@ -1,4 +1,3 @@
-import React from 'react'
 import { useDashboardStore } from '@/stores/dashboardStore'
 import { useMetrics, useTrends, useSessions, useActiveSessions } from '@/hooks/useMetrics'
 import MetricGrid from '@/components/MetricCard'

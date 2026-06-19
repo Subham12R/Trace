@@ -1,12 +1,13 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { spawn } from 'child_process'
 import * as path from 'path'
+import * as os from 'os'
 
 let mainWindow: BrowserWindow | null = null
 let serverProcess: ReturnType<typeof spawn> | null = null
 
 const SERVER_PORT = 8765
-const isDev = !app.isPackaged
+const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -16,7 +17,7 @@ function createWindow() {
     minHeight: 600,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -35,13 +36,19 @@ function createWindow() {
 }
 
 function startServer() {
-  const serverPath = isDev
-    ? path.join(__dirname, '../../server/start.py')
-    : path.join(process.resourcesPath, 'server/start.py')
+  // In dev mode, assume server is started externally by dev.js
+  if (isDev) {
+    console.log('[Electron] Dev mode: expecting server on port', SERVER_PORT)
+    return
+  }
 
-  serverProcess = spawn('python', [serverPath], {
+  const serverPath = path.join(process.resourcesPath, 'server/start.py')
+  const pythonCmd = os.platform() === 'win32' ? 'py -3.12' : 'python3'
+
+  serverProcess = spawn(pythonCmd, [serverPath], {
     env: { ...process.env, TRACE_PORT: String(SERVER_PORT) },
     stdio: 'pipe',
+    shell: os.platform() === 'win32',
   })
 
   serverProcess.stdout?.on('data', (data) => {
@@ -66,8 +73,9 @@ function stopServer() {
 
 app.whenReady().then(() => {
   startServer()
-  // Give server a moment to boot
-  setTimeout(createWindow, 800)
+  // Give server a moment to boot in production
+  const delay = isDev ? 0 : 800
+  setTimeout(createWindow, delay)
 })
 
 app.on('window-all-closed', () => {
