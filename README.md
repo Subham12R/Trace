@@ -72,29 +72,41 @@ All paths are configurable via environment variables.
 
 ### Prerequisites
 - Node.js 20+
-- Python 3.11+
-- pnpm (or npm)
+- Python 3.12 (3.14 not yet supported by all packages)
+- npm
 
 ### Setup
 
 ```bash
-# Clone
-git clone <repo>
-cd trace
-
-# Install frontend dependencies
+# 1. Install frontend dependencies
 cd apps/desktop
-pnpm install
+npm install
 
-# Install backend dependencies
+# 2. Install backend dependencies
 cd ../server
-python -m venv .venv
-.venv\Scripts\activate  # Windows
+py -3.12 -m venv .venv312
+.venv312\Scripts\activate  # Windows
 pip install -r requirements.txt
 
-# Start development
+# 3. Start development (runs server + Vite + Electron)
+cd ../..
+npm run dev
+```
+
+Or run components separately:
+
+```bash
+# Terminal 1: FastAPI server
+cd apps/server
+.venv312\Scripts\python.exe start.py
+
+# Terminal 2: Vite dev server
 cd apps/desktop
-pnpm dev
+npm run dev
+
+# Terminal 3: Electron shell
+cd apps/desktop
+npm run electron:dev
 ```
 
 ### Project Structure
