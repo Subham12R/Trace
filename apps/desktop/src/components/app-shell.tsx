@@ -36,7 +36,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 				<div className="absolute inset-0 bg-noise opacity-[0.015] dark:opacity-[0.025] pointer-events-none z-0 mix-blend-overlay" />
 
 				{/* Top bar with collapse/menu trigger */}
-				<header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-[var(--app-hairline)] bg-[var(--app-canvas)]/85 backdrop-blur-md px-3 sm:px-4">
+				<header id="app-headbar" className="app-headbar sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-[var(--app-hairline)] bg-[var(--app-canvas)]/85 backdrop-blur-md px-3 sm:px-4">
 					<div className="flex items-center gap-2">
 						<SidebarTrigger className="text-[var(--app-muted)] hover:text-[var(--app-ink)]" />
 						<div className="lg:hidden flex items-center gap-2">
