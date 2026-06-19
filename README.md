@@ -7,6 +7,14 @@ Trace is a local-first AI observability dashboard — like Grafana for your AI C
 
 ---
 
+## Download
+
+**[Download Trace-Setup.exe](https://github.com/Subham12R/Trace/releases/latest)** — Windows installer, no Python or runtime required.
+
+Trace auto-updates silently in the background. When a new version is ready, a banner appears inside the app — click **Restart & Update** and you're done.
+
+---
+
 ## What It Does
 
 AI coding CLI tools generate local usage logs. Trace reads those logs in real time and gives you:
@@ -16,6 +24,8 @@ AI coding CLI tools generate local usage logs. Trace reads those logs in real ti
 - **Usage trends** — Hourly, daily, weekly, monthly breakdowns with bar charts
 - **Session drill-down** — Per-conversation token and cost analysis
 - **Active session indicator** — Know which tool is running right now
+- **System tray** — Closing the window keeps Trace running in the background
+- **Auto-update** — New releases download automatically, one click to apply
 - **100% local** — Your data never leaves your machine
 
 ---
@@ -37,11 +47,12 @@ All paths are configurable via environment variables.
 
 ## How It Works
 
-1. **Start Trace** — Electron boots and spawns a local FastAPI server
+1. **Start Trace** — Electron boots and spawns a bundled local FastAPI server (no Python needed)
 2. **File watcher scans** — Every 5 seconds, Trace checks known CLI log directories
 3. **Parses & ingests** — Log files are parsed (JSON, JSONL, SQLite) into a unified SQLite database
 4. **Dashboard updates** — React frontend polls the API every 5 seconds for live metrics
 5. **Visualize** — KPI cards, bar charts, session tables, and trend indicators
+6. **Close to tray** — Closing the window hides Trace to the system tray; the watcher keeps running
 
 ---
 
@@ -72,7 +83,7 @@ All paths are configurable via environment variables.
 
 ### Prerequisites
 - Node.js 20+
-- Python 3.12 (3.14 not yet supported by all packages)
+- Python 3.12 (required for development only — not needed to run the installed app)
 - npm
 
 ### Setup
