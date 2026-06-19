@@ -1,0 +1,16 @@
+const getBaseUrl = async (): Promise<string> => {
+  if (typeof window !== 'undefined' && window.electronAPI) {
+    const port = await window.electronAPI.getServerPort()
+    return `http://localhost:${port}`
+  }
+  return 'http://localhost:8765'
+}
+
+export const api = {
+  async get<T>(path: string): Promise<T> {
+    const base = await getBaseUrl()
+    const res = await fetch(`${base}${path}`)
+    if (!res.ok) throw new Error(`API error: ${res.status}`)
+    return res.json()
+  },
+}

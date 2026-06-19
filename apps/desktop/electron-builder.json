@@ -1,0 +1,27 @@
+{
+  "appId": "com.trace.app",
+  "productName": "Trace",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*"
+  ],
+  "extraResources": [
+    {
+      "from": "../server",
+      "to": "server",
+      "filter": ["**/*", "!.venv"]
+    }
+  ],
+  "mac": {
+    "target": "dmg"
+  },
+  "win": {
+    "target": "nsis"
+  },
+  "linux": {
+    "target": "AppImage"
+  }
+}
