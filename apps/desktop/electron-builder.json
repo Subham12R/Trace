@@ -11,9 +11,8 @@
   ],
   "extraResources": [
     {
-      "from": "../server",
-      "to": "server",
-      "filter": ["**/*", "!.venv"]
+      "from": "../server/dist/server.exe",
+      "to": "server/server.exe"
     }
   ],
   "mac": {

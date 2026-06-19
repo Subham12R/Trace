@@ -50,13 +50,12 @@ function startServer() {
     return
   }
 
-  const serverPath = path.join(process.resourcesPath, 'server/start.py')
-  const pythonCmd = os.platform() === 'win32' ? 'py -3.12' : 'python3'
+  const exeName = os.platform() === 'win32' ? 'server.exe' : 'server'
+  const serverExe = path.join(process.resourcesPath, 'server', exeName)
 
-  serverProcess = spawn(pythonCmd, [serverPath], {
+  serverProcess = spawn(serverExe, [], {
     env: { ...process.env, TRACE_PORT: String(SERVER_PORT) },
     stdio: 'pipe',
-    shell: os.platform() === 'win32',
   })
 
   serverProcess.stdout?.on('data', (data) => {
