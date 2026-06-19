@@ -1,5 +1,5 @@
 <img width="3780" height="1890" alt="your one stop solution for all analytics" src="https://github.com/user-attachments/assets/19f38972-59e3-476f-bda2-a0bfe63c523a" />
-# Trace
+
 
 Trace is a local-first AI observability dashboard — like Grafana for your AI CLI usage. Monitor token consumption, estimated costs, and usage trends across Claude Code, Codex, OpenCode, Gemini CLI, Copilot CLI, and Ollama from a single unified interface.
 
