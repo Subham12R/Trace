@@ -27,7 +27,7 @@
   },
   "win": {
     "target": "nsis",
-    "artifactName": "Trace Setup.exe"
+    "artifactName": "Trace-Setup.exe"
   },
   "linux": {
     "target": "AppImage"
