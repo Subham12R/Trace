@@ -11,6 +11,7 @@ from app.parsers.opencode import OpenCodeParser
 from app.parsers.gemini import GeminiParser
 from app.parsers.copilot import CopilotParser
 from app.parsers.ollama import OllamaParser
+from app.parsers.generic import GenericJsonParser
 from app.services.pricing import calculate_cost
 
 PARSERS = {
@@ -20,6 +21,17 @@ PARSERS = {
     "gemini": GeminiParser(),
     "copilot": CopilotParser(),
     "ollama": OllamaParser(),
+    # Generic parsers for tools with similar JSON structures
+    "amp": GenericJsonParser("amp"),
+    "droid": GenericJsonParser("droid"),
+    "codebuff": GenericJsonParser("codebuff"),
+    "hermes": GenericJsonParser("hermes"),
+    "pi": GenericJsonParser("pi"),
+    "goose": GenericJsonParser("goose"),
+    "openclaw": GenericJsonParser("openclaw"),
+    "kilo": GenericJsonParser("kilo"),
+    "kimi": GenericJsonParser("kimi"),
+    "qwen": GenericJsonParser("qwen"),
 }
 
 

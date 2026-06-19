@@ -2,8 +2,7 @@ import os
 from pathlib import Path
 from typing import Dict, List
 
-# Configurable paths per source. Env vars override defaults.
-# Comma-separated directories supported.
+# All supported AI CLI tools matching ccusage
 SOURCE_CONFIG: Dict[str, Dict] = {
     "claude": {
         "env": "CLAUDE_HOME",
@@ -20,15 +19,65 @@ SOURCE_CONFIG: Dict[str, Dict] = {
         "defaults": ["~/.local/share/opencode"],
         "pattern": "**/*.{json,jsonl}",
     },
-    "gemini": {
-        "env": "GEMINI_DATA_DIR",
-        "defaults": ["~/.gemini/tmp"],
-        "pattern": "**/*.json",
+    "amp": {
+        "env": "AMP_DATA_DIR",
+        "defaults": ["~/.local/share/amp"],
+        "pattern": "**/*.{json,jsonl}",
+    },
+    "droid": {
+        "env": "DROID_SESSIONS_DIR",
+        "defaults": ["~/.factory/sessions"],
+        "pattern": "**/*.{json,jsonl}",
+    },
+    "codebuff": {
+        "env": "CODEBUFF_DATA_DIR",
+        "defaults": ["~/.config/manicode"],
+        "pattern": "**/*.{json,jsonl}",
+    },
+    "hermes": {
+        "env": "HERMES_HOME",
+        "defaults": ["~/.hermes"],
+        "pattern": "**/*.{json,jsonl,db}",
+    },
+    "pi": {
+        "env": "PI_AGENT_DIR",
+        "defaults": ["~/.pi/agent/sessions"],
+        "pattern": "**/*.{json,jsonl}",
+    },
+    "goose": {
+        "env": "GOOSE_PATH_ROOT",
+        "defaults": ["~/.goose"],
+        "pattern": "**/*.{json,jsonl}",
+    },
+    "openclaw": {
+        "env": "OPENCLAW_DIR",
+        "defaults": ["~/.openclaw"],
+        "pattern": "**/*.{json,jsonl}",
+    },
+    "kilo": {
+        "env": "KILO_DATA_DIR",
+        "defaults": ["~/.local/share/kilo"],
+        "pattern": "**/*.{json,jsonl}",
+    },
+    "kimi": {
+        "env": "KIMI_DATA_DIR",
+        "defaults": ["~/.kimi"],
+        "pattern": "**/*.{json,jsonl}",
+    },
+    "qwen": {
+        "env": "QWEN_DATA_DIR",
+        "defaults": ["~/.qwen"],
+        "pattern": "**/*.{json,jsonl}",
     },
     "copilot": {
         "env": "COPILOT_OTEL_FILE_EXPORTER_PATH",
         "defaults": ["~/.copilot/otel/*.jsonl"],
-        "pattern": None,  # specific glob
+        "pattern": None,
+    },
+    "gemini": {
+        "env": "GEMINI_DATA_DIR",
+        "defaults": ["~/.gemini/tmp"],
+        "pattern": "**/*.json",
     },
     "ollama": {
         "env": "OLLAMA_DATA_DIR",
@@ -55,8 +104,17 @@ def get_source_paths(source: str) -> List[Path]:
     resolved = []
     for p in paths:
         expanded = Path(p).expanduser()
-        if cfg["pattern"]:
-            resolved.append(expanded)
-        else:
-            resolved.append(expanded)
+        resolved.append(expanded)
     return resolved
+
+
+def detect_installed_sources() -> List[str]:
+    """Detect which AI CLI tools are installed by checking their data directories."""
+    installed = []
+    for source, cfg in SOURCE_CONFIG.items():
+        paths = get_source_paths(source)
+        for p in paths:
+            if p.exists():
+                installed.append(source)
+                break
+    return installed

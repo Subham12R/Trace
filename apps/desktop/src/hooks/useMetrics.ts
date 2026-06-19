@@ -46,3 +46,20 @@ export function useActiveSessions() {
     staleTime: 4000,
   })
 }
+
+export interface ProviderInfo {
+  id: string
+  name: string
+  installed: boolean
+  env: string
+  defaults: string[]
+}
+
+export function useProviders() {
+  return useQuery<ProviderInfo[]>({
+    queryKey: ['providers'],
+    queryFn: () => api.get('/api/metrics/providers'),
+    refetchInterval: 30000,
+    staleTime: 20000,
+  })
+}

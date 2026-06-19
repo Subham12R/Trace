@@ -25,16 +25,23 @@ def scan_source(source: str, cfg: dict):
             else:
                 files = list(base_path.parent.glob(base_path.name))
         else:
-            files = list(base_path.rglob(pattern.split(";")[0].replace("**/*.", "*.")))
-            # Simplified: use glob for now
+            # Parse pattern and glob accordingly
+            extensions = []
             if "jsonl" in pattern:
-                files = list(base_path.rglob("*.jsonl"))
-            elif "json" in pattern:
-                files = list(base_path.rglob("*.json"))
-            elif "log" in pattern:
-                files = list(base_path.rglob("*.log"))
-            else:
-                files = list(base_path.rglob("*"))
+                extensions.append("*.jsonl")
+            if "json" in pattern:
+                extensions.append("*.json")
+            if "log" in pattern:
+                extensions.append("*.log")
+            if "db" in pattern:
+                extensions.append("*.db")
+            
+            if not extensions:
+                extensions = ["*"]
+            
+            files = []
+            for ext in extensions:
+                files.extend(base_path.rglob(ext))
 
         for file_path in files:
             if file_path.is_file():
@@ -45,12 +52,8 @@ def scan_source(source: str, cfg: dict):
 
 
 def tick():
-    db = SessionLocal()
-    try:
-        for source, cfg in SOURCE_CONFIG.items():
-            scan_source(source, cfg)
-    finally:
-        db.close()
+    for source, cfg in SOURCE_CONFIG.items():
+        scan_source(source, cfg)
 
 
 def start_watcher():

@@ -6,9 +6,25 @@ from app.core.database import SessionLocal
 from app.models.models import Request
 from app.schemas.metrics import MetricsSummary, TrendPoint, SessionSummary, ActiveSession
 from app.services.aggregator import get_time_bucket_expr
-from app.core.config import ACTIVE_SESSION_THRESHOLD_SECONDS
+from app.core.config import ACTIVE_SESSION_THRESHOLD_SECONDS, detect_installed_sources, SOURCE_CONFIG
 
 router = APIRouter()
+
+
+@router.get("/providers")
+def get_providers():
+    """Return all providers with their installation status."""
+    installed = set(detect_installed_sources())
+    return [
+        {
+            "id": source,
+            "name": source.replace("-", " ").title(),
+            "installed": source in installed,
+            "env": cfg["env"],
+            "defaults": cfg["defaults"],
+        }
+        for source, cfg in SOURCE_CONFIG.items()
+    ]
 
 
 def get_db():
