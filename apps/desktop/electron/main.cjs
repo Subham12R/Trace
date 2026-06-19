@@ -42,12 +42,14 @@ let serverProcess = null;
 const SERVER_PORT = 8765;
 const isDev = process.env.NODE_ENV === 'development' || !electron_1.app.isPackaged;
 function createWindow() {
+    electron_1.Menu.setApplicationMenu(null);
     mainWindow = new electron_1.BrowserWindow({
         width: 1280,
         height: 800,
         minWidth: 900,
         minHeight: 600,
         titleBarStyle: 'hiddenInset',
+        icon: path.join(__dirname, '../public/images/icon.png'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),
             contextIsolation: true,

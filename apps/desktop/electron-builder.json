@@ -1,6 +1,7 @@
 {
   "appId": "com.trace.app",
   "productName": "Trace",
+  "icon": "public/images/icon.png",
   "directories": {
     "output": "release"
   },
