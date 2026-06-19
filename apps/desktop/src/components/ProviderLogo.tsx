@@ -12,14 +12,23 @@ const sizeClasses = {
 	lg: { box: "size-10 text-xs", pad: "" },
 };
 
+function resolveLogoUrl(url: string | null): string | null {
+	if (!url) return null;
+	// Server returns app-relative paths like /logos/foo.png — rebase them so
+	// they resolve correctly under Electron's file:// origin.
+	if (url.startsWith("/")) return `${import.meta.env.BASE_URL}${url.slice(1)}`;
+	return url;
+}
+
 export function ProviderLogo({ provider, size = "md" }: ProviderLogoProps) {
 	const [failed, setFailed] = useState(false);
 	const s = sizeClasses[size];
+	const logoSrc = resolveLogoUrl(provider.logo_url);
 
-	if (provider.logo_url && !failed) {
+	if (logoSrc && !failed) {
 		return (
 			<img
-				src={provider.logo_url}
+				src={logoSrc}
 				alt={provider.name}
 				className={`${s.box} rounded-md object-cover shrink-0`}
 				onError={() => setFailed(true)}
