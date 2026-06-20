@@ -13,6 +13,15 @@ let isQuitting = false
 const SERVER_PORT = 8765
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
+// Prevent a second instance from opening — focus the existing window instead
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+}
+
+app.on('second-instance', () => {
+  showWindow()
+})
+
 function showWindow() {
   if (!mainWindow) return
   if (mainWindow.isMinimized()) mainWindow.restore()
@@ -42,6 +51,12 @@ function createTray() {
 }
 
 function createWindow() {
+  // Guard: if a window already exists, just focus it
+  if (mainWindow) {
+    showWindow()
+    return
+  }
+
   Menu.setApplicationMenu(null)
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -57,29 +72,34 @@ function createWindow() {
     },
   })
 
+  // Capture this specific window instance so the close handler always
+  // operates on the right window even if `mainWindow` is later reassigned.
+  const win = mainWindow
+
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools()
+    win.loadURL('http://localhost:5173')
+    win.webContents.openDevTools()
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    win.loadFile(path.join(__dirname, '../dist/index.html'))
   }
 
-  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
-  mainWindow.webContents.on('will-navigate', (event, url) => {
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  win.webContents.on('will-navigate', (event, url) => {
     const isLocal = url.startsWith('file://') || url.startsWith('http://localhost')
     if (!isLocal) event.preventDefault()
   })
 
-  // Hide to tray instead of closing
-  mainWindow.on('close', (event) => {
+  // Hide to tray instead of closing — always operates on `win`, never on
+  // whatever `mainWindow` happens to point to at call time.
+  win.on('close', (event) => {
     if (!isQuitting) {
       event.preventDefault()
-      mainWindow?.hide()
+      win.hide()
     }
   })
 
-  mainWindow.on('closed', () => {
-    mainWindow = null
+  win.on('closed', () => {
+    if (mainWindow === win) mainWindow = null
   })
 }
 
@@ -150,6 +170,14 @@ function setupAutoUpdater() {
 
 app.whenReady().then(async () => {
   startServer()
+
+  // Create the window immediately so there is never a windowless gap that
+  // causes 'activate' to open a second window while the server is starting.
+  // The frontend handles the connecting state via React Query retries.
+  createWindow()
+  createTray()
+  setupAutoUpdater()
+
   if (!isDev) {
     try {
       await waitForServer(SERVER_PORT)
@@ -157,20 +185,14 @@ app.whenReady().then(async () => {
       console.error('[Electron] Server did not start in time:', err)
     }
   }
-  createWindow()
-  createTray()
-  setupAutoUpdater()
 })
 
-// Keep app alive when all windows closed — tray keeps it running
-app.on('window-all-closed', () => {
-  if (process.platform === 'darwin') {
-    app.quit()
-  }
-  // On Windows/Linux: do nothing — tray keeps the app alive
-})
+// Tray keeps the app alive on all platforms.
+// The app is quit only via the tray menu "Quit" item.
+app.on('window-all-closed', () => {})
 
 app.on('activate', () => {
+  // createWindow is idempotent — safe to call even if the window exists
   if (mainWindow === null) {
     createWindow()
   } else {

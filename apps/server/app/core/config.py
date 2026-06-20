@@ -144,6 +144,15 @@ WATCH_INTERVAL_SECONDS = 5
 ACTIVE_SESSION_THRESHOLD_SECONDS = 300
 
 
+_SYSTEM_PATH_PREFIXES = ("/dev/", "/proc/", "/sys/")
+
+
+def _is_user_data_path(p: Path) -> bool:
+    """Return False for system device paths (e.g. /dev/null used to disable OTEL)."""
+    s = str(p)
+    return not any(s.startswith(prefix) for prefix in _SYSTEM_PATH_PREFIXES)
+
+
 def get_source_paths(source: str) -> List[Path]:
     cfg = SOURCE_CONFIG.get(source)
     if not cfg:
@@ -158,7 +167,8 @@ def get_source_paths(source: str) -> List[Path]:
     resolved = []
     for p in paths:
         expanded = Path(p).expanduser()
-        resolved.append(expanded)
+        if _is_user_data_path(expanded):
+            resolved.append(expanded)
     return resolved
 
 
@@ -168,7 +178,12 @@ def detect_installed_sources() -> List[str]:
     for source, cfg in SOURCE_CONFIG.items():
         paths = get_source_paths(source)
         for p in paths:
-            if p.exists():
+            # Paths with glob characters (e.g. ~/.copilot/otel/*.jsonl) — check parent
+            if "*" in str(p) or "?" in str(p):
+                if p.parent.exists() and any(p.parent.glob(p.name)):
+                    installed.append(source)
+                    break
+            elif p.exists():
                 installed.append(source)
                 break
     return installed

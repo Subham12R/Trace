@@ -1,3 +1,4 @@
+import re
 import time
 import threading
 from pathlib import Path
@@ -9,52 +10,78 @@ from app.core.database import SessionLocal
 
 scheduler: BackgroundScheduler | None = None
 
+# Matches brace-expanded extensions like *.{json,jsonl,db}
+_BRACE_EXT_RE = re.compile(r"\*\.\{([^}]+)\}")
+# Matches single extension like **/*.jsonl or *.jsonl
+_SINGLE_EXT_RE = re.compile(r"\*\.([a-zA-Z0-9]+)$")
+# Matches a specific filename like **/state.vscdb or state.vscdb
+_SPECIFIC_FILE_RE = re.compile(r"([^/*{}]+\.[a-zA-Z0-9]+)$")
+
+
+def _glob_files(base_path: Path, pattern: str) -> list[Path]:
+    """Resolve a glob pattern relative to base_path, handling ** prefixes and brace expansion."""
+    # Strip leading **/ prefix properly (not via lstrip which strips characters not strings)
+    stripped = re.sub(r"^\*\*/", "", pattern)
+
+    files: list[Path] = []
+
+    # Case 1: brace-expanded extensions — *.{json,jsonl,db}
+    brace = _BRACE_EXT_RE.search(pattern)
+    if brace:
+        for ext in brace.group(1).split(","):
+            files.extend(base_path.rglob(f"*.{ext.strip()}"))
+        return files
+
+    # Case 2: specific filename — **/state.vscdb or state.vscdb
+    specific = _SPECIFIC_FILE_RE.search(stripped)
+    if specific and "*" not in specific.group(1):
+        files.extend(base_path.rglob(specific.group(1)))
+        return files
+
+    # Case 3: single extension — **/*.jsonl or *.jsonl
+    single = _SINGLE_EXT_RE.search(pattern)
+    if single:
+        files.extend(base_path.rglob(f"*.{single.group(1)}"))
+        return files
+
+    # Fallback: try rglob with the stripped pattern directly
+    try:
+        files.extend(base_path.rglob(stripped))
+    except Exception:
+        pass
+
+    return files
+
 
 def scan_source(source: str, cfg: dict):
     paths = get_source_paths(source)
     pattern = cfg.get("pattern")
 
     for base_path in paths:
-        if not base_path.exists():
-            continue
-
-        if pattern is None:
-            # Specific file or glob pattern in defaults
-            if base_path.is_file():
-                files = [base_path]
+        # For glob paths (e.g. ~/.copilot/otel/*.jsonl), use the parent directory
+        if "*" in str(base_path) or "?" in str(base_path):
+            effective_base = base_path.parent
+            if not effective_base.exists():
+                continue
+            if pattern is None:
+                # Pattern is in the path itself — glob directly
+                files = list(effective_base.glob(base_path.name))
             else:
-                files = list(base_path.parent.glob(base_path.name))
+                files = _glob_files(effective_base, pattern)
         else:
-            files = []
-            # Use the full glob pattern directly (supports ** and named files)
-            try:
-                files.extend(base_path.rglob(pattern.lstrip("**/").lstrip("**/")))
-            except Exception:
-                pass
+            if not base_path.exists():
+                continue
 
-            # If the pattern has a specific filename (not just extension), use rglob on it
-            import re
-            filename_match = re.search(r"([^/*{}]+\.[a-zA-Z0-9]+)$", pattern)
-            if filename_match and not files:
-                filename = filename_match.group(1)
-                files.extend(base_path.rglob(filename))
-
-            # Also handle brace-expanded patterns like *.{json,jsonl}
-            if not files:
-                brace_match = re.search(r"\*\.\{([^}]+)\}", pattern)
-                if brace_match:
-                    exts = brace_match.group(1).split(",")
-                    for ext in exts:
-                        files.extend(base_path.rglob(f"*.{ext.strip()}"))
-
-            # Handle single extension patterns like **/*.jsonl
-            if not files:
-                ext_match = re.search(r"\*\.([a-zA-Z0-9]+)$", pattern)
-                if ext_match:
-                    files.extend(base_path.rglob(f"*.{ext_match.group(1)}"))
+            if pattern is None:
+                if base_path.is_file():
+                    files = [base_path]
+                else:
+                    files = list(base_path.parent.glob(base_path.name))
+            else:
+                files = _glob_files(base_path, pattern)
 
         for file_path in set(files):
-            # Skip dependency and virtual environment directories to prevent scanning vendor files
+            # Skip dependency and virtual environment directories
             file_str = str(file_path)
             if any(p in file_str for p in ["node_modules", "venv", ".venv", "site-packages"]):
                 continue
