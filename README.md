@@ -1,7 +1,7 @@
 <img width="3780" height="1890" alt="your one stop solution for all analytics" src="https://github.com/user-attachments/assets/19f38972-59e3-476f-bda2-a0bfe63c523a" />
 
 
-Trace is a local-first AI observability dashboard — like Grafana for your AI CLI usage. Monitor token consumption, estimated costs, and usage trends across Claude Code, Codex, OpenCode, Gemini CLI, Copilot CLI, and Ollama from a single unified interface.
+Trace is a local-first AI observability dashboard — like Grafana for your AI CLI usage. Monitor token consumption, estimated costs, and usage trends across Claude Code, Cursor, Codex, OpenCode, Gemini CLI, Copilot CLI, and Ollama from a single unified interface.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
@@ -9,9 +9,12 @@ Trace is a local-first AI observability dashboard — like Grafana for your AI C
 
 ## Download
 
-**[Download Trace-Setup.exe](https://github.com/Subham12R/Trace/releases/latest)** — Windows installer, no Python or runtime required.
+| Platform | Link |
+|---|---|
+| **macOS** (Apple Silicon) | **[Trace-0.3.1-mac.dmg](https://github.com/Subham12R/Trace/releases/latest)** |
+| **Windows** | **[Trace-Setup.exe](https://github.com/Subham12R/Trace/releases/latest)** |
 
-Trace auto-updates silently in the background. When a new version is ready, a banner appears inside the app — click **Restart & Update** and you're done.
+No Python or runtime required — everything is bundled. Trace auto-updates silently in the background. When a new version is ready, a banner appears inside the app — click **Restart & Update** and you're done.
 
 ---
 
@@ -35,6 +38,7 @@ AI coding CLI tools generate local usage logs. Trace reads those logs in real ti
 | Tool | Status | Notes |
 |---|---|---|
 | Claude Code | ✅ Supported | Reads `~/.claude/` and `~/.config/claude/projects/` |
+| Cursor | ✅ Supported | Reads `~/Library/Application Support/Cursor/` (Mac), `%APPDATA%\Cursor\` (Windows) |
 | Codex | ✅ Supported | Reads `~/.codex/` |
 | OpenCode | ✅ Supported | Reads `~/.local/share/opencode/` |
 | Gemini CLI | ✅ Supported | Reads `~/.gemini/tmp/` |
@@ -73,7 +77,7 @@ All paths are configurable via environment variables.
 │         ↑ reads local log files               │
 │  ~/.claude/  ~/.codex/  ~/.copilot/otel/      │
 │  ~/.gemini/  ~/.local/share/opencode/         │
-│  ~/.ollama/                                   │
+│  ~/.ollama/  ~/Library/Application Support/   │
 └─────────────────────────────────────────────┘
 ```
 
@@ -83,21 +87,23 @@ All paths are configurable via environment variables.
 
 ### Prerequisites
 - Node.js 20+
-- Python 3.12 (required for development only — not needed to run the installed app)
+- Python 3.12+ (required for development only — not needed to run the installed app)
 - npm
 
 ### Setup
 
 ```bash
-# 1. Install frontend dependencies
-cd apps/desktop
-npm install
+# 1. Install dependencies
+npm install --include=dev
 
-# 2. Install backend dependencies
-cd ../server
+# 2. Install backend dependencies (Mac)
+cd apps/server
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+# Windows
 py -3.12 -m venv .venv312
-.venv312\Scripts\activate  # Windows
-pip install -r requirements.txt
+.venv312\Scripts\pip install -r requirements.txt
 
 # 3. Start development (runs server + Vite + Electron)
 cd ../..
@@ -107,7 +113,11 @@ npm run dev
 Or run components separately:
 
 ```bash
-# Terminal 1: FastAPI server
+# Terminal 1: FastAPI server (Mac)
+cd apps/server
+.venv/bin/python start.py
+
+# Terminal 1: FastAPI server (Windows)
 cd apps/server
 .venv312\Scripts\python.exe start.py
 
@@ -120,13 +130,30 @@ cd apps/desktop
 npm run electron:dev
 ```
 
+### Building
+
+```bash
+# Mac
+cd apps/desktop
+npm run electron:build:mac
+
+# Windows
+cd apps/desktop
+npm run electron:build
+```
+
 ### Project Structure
 
 ```
 trace/
 ├── apps/
 │   ├── desktop/          # Electron + Vite + React
+│   │   ├── electron/     # Main process (main.ts, preload.ts)
+│   │   └── src/          # React frontend
 │   └── server/           # FastAPI sidecar
+│       ├── app/          # API routes, parsers, watcher
+│       ├── build.sh      # Mac PyInstaller build script
+│       └── build.ps1     # Windows PyInstaller build script
 ├── database/
 │   └── schema.sql        # Reference SQLite schema
 └── docs/
