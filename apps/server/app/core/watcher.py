@@ -96,6 +96,12 @@ def scan_source(source: str, cfg: dict):
 def tick():
     for source, cfg in SOURCE_CONFIG.items():
         scan_source(source, cfg)
+    # Fire-and-forget cloud sync if a token is stored
+    from app.services.cloud_account import get_cloud_token, sync_to_cloud
+    token = get_cloud_token()
+    if token:
+        t = threading.Thread(target=sync_to_cloud, args=(token,), daemon=True)
+        t.start()
 
 
 def start_watcher():

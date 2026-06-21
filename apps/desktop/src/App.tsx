@@ -6,6 +6,7 @@ import { ProviderAnalysisPage } from "@/components/ProviderAnalysisPage";
 import { SettingsPage } from "@/components/SettingsPage";
 import { ProfilePage } from "@/components/ProfilePage";
 import { CustomizePage } from "@/components/CustomizePage";
+import { AccountPage } from "@/components/AccountPage";
 import { OnboardingPage, isOnboarded } from "@/components/OnboardingPage";
 import { getHash } from "@/components/app-shared";
 import { Toaster } from "@/components/ui/sonner";
@@ -36,6 +37,8 @@ export default function App() {
 			return <SettingsPage />;
 		case "profile":
 			return <ProfilePage />;
+		case "account":
+			return <AccountPage />;
 		default:
 			return <HomePage />;
 		}

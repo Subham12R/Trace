@@ -11,7 +11,7 @@ export interface ModelArt {
 
 interface ArtRule {
 	test: RegExp;
-	src: string;
+	src: string | null;
 	accent: string;
 	family: string;
 }
@@ -35,6 +35,11 @@ const MODEL_RULES: ArtRule[] = [
 	{ test: /(copilot)/, src: `${B}logos/github.svg`, accent: "#6e40c9", family: "Copilot" },
 	{ test: /(cursor)/, src: `${B}logos/cursor.png`, accent: "#00bcd4", family: "Cursor" },
 	{ test: /(antigravity)/, src: `${B}logos/antigravity.jpg`, accent: "#34a853", family: "Antigravity" },
+	{ test: /(codellama)/, src: `${B}logos/meta.svg`, accent: "#0467df", family: "CodeLlama" },
+	{ test: /(phi[\d]?)/, src: null, accent: "#0078d4", family: "Microsoft Phi" },
+	{ test: /(falcon)/, src: null, accent: "#ff6b35", family: "Falcon" },
+	{ test: /(starcoder)/, src: null, accent: "#ffd700", family: "StarCoder" },
+	{ test: /(command-r)/, src: null, accent: "#39a7d0", family: "Cohere" },
 ];
 
 /** Fallback by provider/source id when the model name carries no family signal. */

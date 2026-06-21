@@ -10,6 +10,18 @@ let serverProcess: ReturnType<typeof spawn> | null = null
 let tray: Tray | null = null
 let isQuitting = false
 
+function handleTraceUrl(url: string) {
+  try {
+    const parsed = new URL(url)
+    if (parsed.pathname === '/auth/callback') {
+      const token = parsed.searchParams.get('token')
+      if (token) mainWindow?.webContents.send('cloud-auth-callback', token)
+    }
+  } catch {
+    // ignore malformed deep-links
+  }
+}
+
 const SERVER_PORT = 8765
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
@@ -18,7 +30,9 @@ if (!app.requestSingleInstanceLock()) {
   app.quit()
 }
 
-app.on('second-instance', () => {
+app.on('second-instance', (_event, argv) => {
+  const url = argv.find((a) => a.startsWith('trace://'))
+  if (url) handleTraceUrl(url)
   showWindow()
 })
 
@@ -169,6 +183,13 @@ function setupAutoUpdater() {
 }
 
 app.whenReady().then(async () => {
+  app.setAsDefaultProtocolClient('trace')
+
+  // macOS deep-link delivery
+  app.on('open-url', (_event, url) => {
+    handleTraceUrl(url)
+  })
+
   startServer()
 
   // Create the window immediately so there is never a windowless gap that
@@ -213,5 +234,8 @@ ipcMain.handle('restart-and-install', () => {
   autoUpdater.quitAndInstall()
 })
 ipcMain.handle('open-external', (_event, url: string) => {
+  shell.openExternal(url)
+})
+ipcMain.handle('open-cloud-login', (_event, url: string) => {
   shell.openExternal(url)
 })

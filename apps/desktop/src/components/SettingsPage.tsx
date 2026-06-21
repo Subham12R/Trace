@@ -1,10 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useProviders, useAuthStatus, connectProvider, disconnectProvider } from "@/hooks/useMetrics";
-import { XCircle, Folder, Cloud, Lock, Eye, EyeOff } from "lucide-react";
+import { useProviders, useAuthStatus, useProxyStatus, connectProvider, disconnectProvider } from "@/hooks/useMetrics";
+import { XCircle, Folder, Cloud, Lock, Eye, EyeOff, Download, Radio } from "lucide-react";
 import { ProviderLogo } from "./ProviderLogo";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { getBaseUrl } from "@/lib/api";
 
 const CLOUD_PROVIDERS = [
   {
@@ -22,7 +24,21 @@ const CLOUD_PROVIDERS = [
 export function SettingsPage() {
 	const { data: providers, isLoading } = useProviders();
 	const { data: authStatus, isLoading: authLoading } = useAuthStatus();
+	const { data: proxyStatus } = useProxyStatus();
 	const queryClient = useQueryClient();
+
+	const handleExport = async (format: 'json' | 'csv') => {
+		try {
+			const base = await getBaseUrl()
+			if (window.electronAPI) {
+				window.electronAPI.openExternal(`${base}/api/export/${format}?range=all`)
+			} else {
+				window.open(`${base}/api/export/${format}?range=all`, '_blank')
+			}
+		} catch {
+			toast.error('Could not open export URL')
+		}
+	}
 
 	return (
 		<div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
@@ -105,6 +121,80 @@ export function SettingsPage() {
 						)}
 					</CardContent>
 				</Card>
+
+				{/* Ollama Proxy */}
+				<Card className="border-2 border-[var(--app-hairline)] bg-[var(--app-soft)] p-4 rounded-[14px] card-depth">
+					<CardHeader>
+						<CardTitle className="text-lg font-semibold text-[var(--app-ink)] flex items-center gap-2">
+							<Radio className="size-4" />
+							Ollama Proxy
+						</CardTitle>
+						<CardDescription className="text-[var(--app-muted)]">
+							Track tokens from third-party apps (Open WebUI, Msty, scripts)
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="mt-4 space-y-3">
+						<div className="flex items-center justify-between p-3 rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)]">
+							<div>
+								<p className="text-sm font-medium text-[var(--app-ink)]">Proxy Status</p>
+								<p className="text-[11px] text-[var(--app-muted)] mt-0.5">
+									{proxyStatus?.requests_logged ?? 0} requests logged
+								</p>
+							</div>
+							{proxyStatus?.running ? (
+								<Badge className="bg-[var(--app-ink)] text-[var(--app-canvas)] hover:bg-[var(--app-ink)] text-[10px]">Running</Badge>
+							) : (
+								<Badge variant="secondary" className="bg-[var(--app-soft)] text-[var(--app-muted)] text-[10px]">Stopped</Badge>
+							)}
+						</div>
+						<div className="p-3 rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)]">
+							<p className="text-xs text-[var(--app-muted)]">
+								Point other apps to{" "}
+								<code className="font-mono bg-[var(--app-soft)] px-1 py-0.5 rounded text-[var(--app-ink)]">
+									localhost:{proxyStatus?.port ?? 11435}
+								</code>{" "}
+								instead of{" "}
+								<code className="font-mono bg-[var(--app-soft)] px-1 py-0.5 rounded text-[var(--app-ink)]">
+									localhost:11434
+								</code>{" "}
+								to track their token usage.
+							</p>
+						</div>
+					</CardContent>
+				</Card>
+
+				{/* Export Data */}
+				<Card className="border-2 border-[var(--app-hairline)] bg-[var(--app-soft)] p-4 rounded-[14px] card-depth">
+					<CardHeader>
+						<CardTitle className="text-lg font-semibold text-[var(--app-ink)] flex items-center gap-2">
+							<Download className="size-4" />
+							Export Data
+						</CardTitle>
+						<CardDescription className="text-[var(--app-muted)]">
+							Download your full usage history
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="mt-4 flex flex-col gap-3">
+						<div className="flex gap-3">
+							<button
+								onClick={() => handleExport('json')}
+								className="flex-1 px-4 py-2.5 text-sm rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)] text-[var(--app-ink)] hover:bg-[var(--app-soft)] transition-colors font-medium"
+							>
+								Export JSON
+							</button>
+							<button
+								onClick={() => handleExport('csv')}
+								className="flex-1 px-4 py-2.5 text-sm rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)] text-[var(--app-ink)] hover:bg-[var(--app-soft)] transition-colors font-medium"
+							>
+								Export CSV
+							</button>
+						</div>
+						<p className="text-[11px] text-[var(--app-muted)]">
+							Exports all-time data. Use the API directly for filtered ranges:<br />
+							<code className="font-mono">/api/export/csv?range=week</code>
+						</p>
+					</CardContent>
+				</Card>
 			</div>
 		</div>
 	);
@@ -130,6 +220,9 @@ function CloudProviderCard({
 			await connectProvider(provider.id, key.trim());
 			setKey("");
 			onRefresh();
+			toast.success(`${provider.name} connected`);
+		} catch {
+			toast.error(`Failed to connect ${provider.name}`);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -140,6 +233,9 @@ function CloudProviderCard({
 		try {
 			await disconnectProvider(provider.id);
 			onRefresh();
+			toast.success(`${provider.name} disconnected`);
+		} catch {
+			toast.error(`Failed to disconnect ${provider.name}`);
 		} finally {
 			setIsSubmitting(false);
 		}

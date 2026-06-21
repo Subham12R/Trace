@@ -32,6 +32,13 @@ def _find_windows_account_picture() -> str | None:
     return None
 
 
+@router.get("/proxy-status")
+def proxy_status():
+    """Return Ollama proxy status and request count."""
+    from app.services.ollama_proxy import get_proxy_status
+    return get_proxy_status()
+
+
 @router.get("/user", response_model=SystemUser)
 def get_system_user():
     name = getpass.getuser()

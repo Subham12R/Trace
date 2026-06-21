@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRef } from 'react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import type { MetricsSummary, TrendPoint, SessionSummary, ActiveSession, ProjectUsage } from '@/types/metrics'
@@ -59,11 +60,23 @@ export interface ProviderInfo {
 }
 
 export function useProviders() {
+  const seenRef = useRef<Set<string>>(new Set())
+
   return useQuery<ProviderInfo[]>({
     queryKey: ['providers'],
     queryFn: () => api.get('/api/metrics/providers'),
     refetchInterval: 30000,
     staleTime: 20000,
+    select: (data) => {
+      const installed = data.filter((p) => p.installed)
+      if (seenRef.current.size > 0) {
+        installed
+          .filter((p) => !seenRef.current.has(p.id))
+          .forEach((p) => toast.info(`New provider detected: ${p.name}`))
+      }
+      installed.forEach((p) => seenRef.current.add(p.id))
+      return data
+    },
   })
 }
 
@@ -197,4 +210,34 @@ export async function connectProvider(provider: string, credential: string) {
 
 export async function disconnectProvider(provider: string) {
   return api.delete(`/api/auth/${provider}/disconnect`)
+}
+
+export interface ProxyStatus {
+  running: boolean
+  port: number
+  requests_logged: number
+}
+
+export function useProxyStatus() {
+  return useQuery<ProxyStatus>({
+    queryKey: ['system', 'proxy-status'],
+    queryFn: () => api.get('/api/system/proxy-status'),
+    refetchInterval: 10000,
+    staleTime: 8000,
+  })
+}
+
+export interface CloudAccount {
+  logged_in: boolean
+  email?: string
+  name?: string
+}
+
+export function useCloudAccount() {
+  return useQuery<CloudAccount>({
+    queryKey: ['cloud', 'account'],
+    queryFn: () => api.get('/api/cloud/account'),
+    refetchInterval: 30000,
+    staleTime: 20000,
+  })
 }

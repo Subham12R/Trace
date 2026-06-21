@@ -125,8 +125,16 @@ class OllamaParser(BaseParser):
             "session_id": record.get("session_id") or record.get("conversation_id"),
             "timestamp": self._parse_ts(ts) if ts else datetime.utcnow(),
             "model": record.get("model"),
-            "input_tokens": usage.get("prompt_tokens", 0) or usage.get("input_tokens", 0),
-            "output_tokens": usage.get("completion_tokens", 0) or usage.get("output_tokens", 0),
+            "input_tokens": (
+                usage.get("prompt_tokens")
+                or usage.get("input_tokens")
+                or record.get("prompt_eval_count", 0)
+            ),
+            "output_tokens": (
+                usage.get("completion_tokens")
+                or usage.get("output_tokens")
+                or record.get("eval_count", 0)
+            ),
             "cache_read_tokens": 0,
             "cache_write_tokens": 0,
             "project": project,

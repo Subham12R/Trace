@@ -5,8 +5,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   restartAndInstall: () => ipcRenderer.invoke('restart-and-install'),
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
+  openCloudLogin: (url: string) => ipcRenderer.invoke('open-cloud-login', url),
   onUpdateDownloaded: (cb: () => void) => {
     ipcRenderer.on('update-downloaded', cb)
     return () => ipcRenderer.removeListener('update-downloaded', cb)
+  },
+  onCloudAuthCallback: (cb: (token: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, token: string) => cb(token)
+    ipcRenderer.on('cloud-auth-callback', handler)
+    return () => ipcRenderer.removeListener('cloud-auth-callback', handler)
   },
 })

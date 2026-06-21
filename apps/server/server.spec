@@ -35,6 +35,9 @@ a = Analysis(
         'pydantic_core',
         'pydantic.networks',
         'pydantic_settings',
+        # stdlib http (used by ollama proxy)
+        'http.server',
+        'http.client',
     ],
     hookspath=[],
     hooksconfig={},

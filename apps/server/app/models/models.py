@@ -23,6 +23,7 @@ class Request(Base):
     latency_ms = Column(Integer, nullable=True)
     source_file = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    cloud_synced_at = Column(DateTime, nullable=True)
 
 
 class IngestionState(Base):

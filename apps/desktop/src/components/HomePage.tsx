@@ -8,7 +8,9 @@ import { MiniSparkline } from "./MiniSparkline";
 import { ProviderLogo } from "./ProviderLogo";
 import { ModelBadge } from "./ModelBadge";
 import { MotionCard } from "./MotionCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import { extractModelName } from "@/lib/modelName";
+import { useServerStore } from "@/stores/serverStore";
 
 function greetingFor(hour: number): string {
 	if (hour < 12) return "Good morning";
@@ -17,12 +19,17 @@ function greetingFor(hour: number): string {
 }
 
 export function HomePage() {
-	const { data: metrics } = useMetrics("today");
-	const { data: providers } = useProviders();
+	const { data: metrics, isLoading: metricsLoading } = useMetrics("today");
+	const { data: providers, isLoading: providersLoading } = useProviders();
 	const { data: activeSessions } = useActiveSessions();
-	const { data: models } = useModels("today");
+	const { data: models, isLoading: modelsLoading } = useModels("today");
 	const { data: trends } = useTrends("today", false);
 	const { data: quotas } = useQuota();
+	const serverStatus = useServerStore((s) => s.status);
+
+	const showSkeleton = serverStatus !== 'online' || metricsLoading;
+	const showModelSkeleton = serverStatus !== 'online' || modelsLoading;
+	const showProviderSkeleton = serverStatus !== 'online' || providersLoading;
 
 	const profile = useMemo(() => getStoredProfile(), []);
 	const hasQuotas = quotas && quotas.length > 0;
@@ -101,7 +108,7 @@ export function HomePage() {
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 lg:mb-8">
 				<AnalyticsBlock
 					index={0}
-					value={metrics?.total_requests?.toLocaleString() || "0"}
+					value={showSkeleton ? null : (metrics?.total_requests?.toLocaleString() ?? "0")}
 					label="Total Requests"
 					icon={<MessageSquare className="size-4 text-[var(--app-ink)]" />}
 					subtitle={activeSessions && activeSessions.length > 0 ? `${activeSessions.length} active` : "No active sessions"}
@@ -109,7 +116,7 @@ export function HomePage() {
 				/>
 				<AnalyticsBlock
 					index={1}
-					value={metrics ? `${((metrics.input_tokens + metrics.output_tokens) / 1000).toFixed(1)}k` : "0"}
+					value={showSkeleton ? null : (metrics ? `${((metrics.input_tokens + metrics.output_tokens) / 1000).toFixed(1)}k` : "0")}
 					label="Total Tokens"
 					icon={<Cpu className="size-4 text-[var(--app-ink)]" />}
 					subtitle="Input + output combined"
@@ -117,7 +124,7 @@ export function HomePage() {
 				/>
 				<AnalyticsBlock
 					index={2}
-					value={`$${metrics?.total_cost?.toFixed(2) || "0.00"}`}
+					value={showSkeleton ? null : `$${metrics?.total_cost?.toFixed(2) ?? "0.00"}`}
 					label="Estimated Cost"
 					icon={<TrendingUp className="size-4 text-[var(--app-ink)]" />}
 					subtitle="Based on model pricing"
@@ -125,7 +132,7 @@ export function HomePage() {
 				/>
 				<AnalyticsBlock
 					index={3}
-					value={detectedProviders.length.toString()}
+					value={showProviderSkeleton ? null : detectedProviders.length.toString()}
 					label="Active Providers"
 					icon={<Zap className="size-4 text-[var(--app-ink)]" />}
 					subtitle={topModel ? `Top: ${extractModelName(topModel.model)}` : "No model data"}
@@ -145,7 +152,18 @@ export function HomePage() {
 						<span className="text-[10px] sm:text-xs font-medium text-[var(--app-muted)] uppercase tracking-wide">By cost</span>
 					</div>
 					<div className="space-y-2.5">
-						{topModels.length === 0 ? (
+						{showModelSkeleton ? (
+							Array.from({ length: 4 }).map((_, i) => (
+								<div key={i} className="flex items-center gap-3 rounded-lg border border-[var(--app-hairline)] bg-[var(--app-canvas)] p-2.5">
+									<Skeleton className="size-8 rounded-lg shrink-0" />
+									<div className="flex-1 space-y-1.5">
+										<Skeleton className="h-3.5 w-32" />
+										<Skeleton className="h-1.5 w-full rounded-full" />
+									</div>
+									<Skeleton className="h-5 w-12 shrink-0" />
+								</div>
+							))
+						) : topModels.length === 0 ? (
 							<p className="text-sm text-[var(--app-muted)]">No model usage yet.</p>
 						) : (
 							topModels.map((m) => (
@@ -185,7 +203,20 @@ export function HomePage() {
 						</span>
 					</div>
 					<div className="space-y-3">
-						{detectedProviders.length === 0 ? (
+						{showProviderSkeleton ? (
+							Array.from({ length: 3 }).map((_, i) => (
+								<div key={i} className="flex items-center gap-3 rounded-lg border border-[var(--app-hairline)] bg-[var(--app-canvas)] p-2.5">
+									<Skeleton className="size-8 rounded-lg shrink-0" />
+									<div className="flex-1 space-y-1.5">
+										<div className="flex items-center justify-between">
+											<Skeleton className="h-3.5 w-24" />
+											<Skeleton className="h-4 w-16 rounded-md" />
+										</div>
+										<Skeleton className="h-1.5 w-full rounded-full" />
+									</div>
+								</div>
+							))
+						) : detectedProviders.length === 0 ? (
 							<p className="text-sm text-[var(--app-muted)]">No providers detected yet.</p>
 						) : (
 							detectedProviders.map((provider, i) => (
@@ -245,7 +276,7 @@ function AnalyticsBlock({
 	index,
 	sparkline,
 }: {
-	value: string;
+	value: string | null;
 	label: string;
 	icon: React.ReactNode;
 	subtitle: string;
@@ -263,7 +294,11 @@ function AnalyticsBlock({
 					{icon}
 				</span>
 			</div>
-			<div className="text-2xl sm:text-3xl font-semibold text-[var(--app-ink)] tracking-tight">{value}</div>
+			{value === null ? (
+				<Skeleton className="h-8 w-20 mt-1" />
+			) : (
+				<div className="text-2xl sm:text-3xl font-semibold text-[var(--app-ink)] tracking-tight">{value}</div>
+			)}
 			<p className="text-[10px] sm:text-xs text-[var(--app-muted)] mt-1 truncate">{subtitle}</p>
 			{sparkline.length > 1 && (
 				<div className="mt-3 pt-3 border-t border-[var(--app-hairline)]">

@@ -1,6 +1,9 @@
 import os
+import sys
 from pathlib import Path
 from typing import Dict, List
+
+OLLAMA_PROXY_PORT = int(os.environ.get("OLLAMA_PROXY_PORT", "11435"))
 
 # All supported AI CLI tools matching ccusage
 SOURCE_CONFIG: Dict[str, Dict] = {
@@ -10,6 +13,9 @@ SOURCE_CONFIG: Dict[str, Dict] = {
         "pattern": "**/*.jsonl",
         "domain": "anthropic.com",
         "logo_url": "/logos/claudecode.png",
+        "platform_defaults": {
+            "win32": ["~/AppData/Roaming/Claude/projects"],
+        },
     },
     "codex": {
         "env": "CODEX_HOME",
@@ -108,13 +114,20 @@ SOURCE_CONFIG: Dict[str, Dict] = {
         "pattern": "**/*.json",
         "domain": "google.com",
         "logo_url": "/logos/gemini.svg",
+        "platform_defaults": {
+            "win32": ["~/AppData/Roaming/gemini/tmp"],
+        },
     },
     "ollama": {
         "env": "OLLAMA_DATA_DIR",
-        "defaults": ["~/.ollama", "~/AppData/Local/Ollama"],
-        "pattern": "**/*.{log,sqlite,db}",
+        "defaults": ["~/.ollama", "~/AppData/Local/Ollama", "~/.trace"],
+        "pattern": "**/*.{log,sqlite,db,jsonl}",
         "domain": "ollama.com",
         "logo_url": "/logos/ollama.svg",
+        "platform_defaults": {
+            "darwin": ["~/Library/Logs/Ollama"],
+            "linux": ["~/.local/share/ollama"],
+        },
     },
     "cursor": {
         "env": "CURSOR_DATA_DIR",
@@ -126,6 +139,9 @@ SOURCE_CONFIG: Dict[str, Dict] = {
         "pattern": "**/state.vscdb",
         "domain": "cursor.com",
         "logo_url": "/logos/cursor.png",
+        "platform_defaults": {
+            "win32": ["~/AppData/Local/Cursor/User/globalStorage"],
+        },
     },
     "antigravity": {
         "env": "ANTIGRAVITY_DATA_DIR",
@@ -162,7 +178,9 @@ def get_source_paths(source: str) -> List[Path]:
     if raw:
         paths = [p.strip() for p in raw.split(",")]
     else:
-        paths = cfg["defaults"]
+        paths = list(cfg["defaults"])
+        platform_extra = cfg.get("platform_defaults", {}).get(sys.platform, [])
+        paths = paths + platform_extra
 
     resolved = []
     for p in paths:
@@ -172,10 +190,38 @@ def get_source_paths(source: str) -> List[Path]:
     return resolved
 
 
+_PROCESS_MAP = {
+    "ollama.exe": "ollama", "ollama": "ollama",
+    "cursor.exe": "cursor",
+    "claude.exe": "claude", "claude": "claude",
+}
+
+
+def detect_running_processes() -> set:
+    """Return set of source names whose processes are currently running."""
+    import subprocess
+    try:
+        if sys.platform == "win32":
+            out = subprocess.check_output(
+                ["tasklist", "/fo", "csv", "/nh"], text=True, timeout=3
+            )
+            names = {line.split(",")[0].strip('"').lower() for line in out.splitlines() if line}
+        else:
+            out = subprocess.check_output(["ps", "-eo", "comm"], text=True, timeout=3)
+            names = {n.strip().lower() for n in out.splitlines()}
+        return {_PROCESS_MAP[n] for n in names if n in _PROCESS_MAP}
+    except Exception:
+        return set()
+
+
 def detect_installed_sources() -> List[str]:
-    """Detect which AI CLI tools are installed by checking their data directories."""
+    """Detect which AI CLI tools are installed by checking directories or running processes."""
+    running = detect_running_processes()
     installed = []
     for source, cfg in SOURCE_CONFIG.items():
+        if source in running:
+            installed.append(source)
+            continue
         paths = get_source_paths(source)
         for p in paths:
             # Paths with glob characters (e.g. ~/.copilot/otel/*.jsonl) — check parent
