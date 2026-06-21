@@ -36,21 +36,21 @@ SOURCE_CONFIG: Dict[str, Dict] = {
         "defaults": ["~/.local/share/amp"],
         "pattern": "**/*.{json,jsonl}",
         "domain": None,
-        "logo_url": "/logos/amp.png",
+        "logo_url": "/logos/amp-logo.svg",
     },
     "droid": {
         "env": "DROID_SESSIONS_DIR",
         "defaults": ["~/.factory/sessions"],
         "pattern": "**/*.{json,jsonl}",
         "domain": "factory.ai",
-        "logo_url": "/logos/droid.png",
+        "logo_url": "/logos/factory.png",
     },
     "codebuff": {
         "env": "CODEBUFF_DATA_DIR",
         "defaults": ["~/.config/manicode"],
         "pattern": "**/*.{json,jsonl}",
         "domain": "manicode.ai",
-        "logo_url": "/logos/codebuff.png",
+        "logo_url": "/logos/maincode.png",
     },
     "hermes": {
         "env": "HERMES_HOME",
@@ -78,7 +78,7 @@ SOURCE_CONFIG: Dict[str, Dict] = {
         "defaults": ["~/.openclaw"],
         "pattern": "**/*.{json,jsonl}",
         "domain": None,
-        "logo_url": "/logos/openclaw.png",
+        "logo_url": "/logos/openclaw.jpeg",
     },
     "kilo": {
         "env": "KILO_DATA_DIR",
