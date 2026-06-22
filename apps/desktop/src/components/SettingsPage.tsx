@@ -30,13 +30,21 @@ export function SettingsPage() {
 	const handleExport = async (format: 'json' | 'csv') => {
 		try {
 			const base = await getBaseUrl()
+			const url = `${base}/api/export/${format}?range=all`
 			if (window.electronAPI) {
-				window.electronAPI.openExternal(`${base}/api/export/${format}?range=all`)
+				await window.electronAPI.downloadUrl(url)
 			} else {
-				window.open(`${base}/api/export/${format}?range=all`, '_blank')
+				const res = await fetch(url)
+				if (!res.ok) throw new Error(`Export failed: ${res.status}`)
+				const blob = await res.blob()
+				const a = document.createElement('a')
+				a.href = URL.createObjectURL(blob)
+				a.download = `trace-export.${format}`
+				a.click()
+				URL.revokeObjectURL(a.href)
 			}
 		} catch {
-			toast.error('Could not open export URL')
+			toast.error('Export failed')
 		}
 	}
 

@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   restartAndInstall: () => ipcRenderer.invoke('restart-and-install'),
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
+  downloadUrl: (url: string) => ipcRenderer.invoke('download-url', url),
   openCloudLogin: (url: string) => ipcRenderer.invoke('open-cloud-login', url),
   onUpdateDownloaded: (cb: () => void) => {
     ipcRenderer.on('update-downloaded', cb)

@@ -24,6 +24,10 @@ function handleTraceUrl(url: string) {
 
 const SERVER_PORT = 8765
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
+// public/ is not packaged — Vite copies it into dist/ at build time
+const ICON_PATH = isDev
+  ? path.join(__dirname, '../public/images/icon.png')
+  : path.join(__dirname, '../dist/images/icon.png')
 
 // Prevent a second instance from opening — focus the existing window instead
 if (!app.requestSingleInstanceLock()) {
@@ -44,7 +48,7 @@ function showWindow() {
 }
 
 function createTray() {
-  const iconPath = path.join(__dirname, '../public/images/icon.png')
+  const iconPath = ICON_PATH
   const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 })
   tray = new Tray(icon)
   tray.setToolTip('Trace')
@@ -78,7 +82,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     titleBarStyle: 'hiddenInset',
-    icon: path.join(__dirname, '../public/images/icon.png'),
+    icon: ICON_PATH,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -235,6 +239,9 @@ ipcMain.handle('restart-and-install', () => {
 })
 ipcMain.handle('open-external', (_event, url: string) => {
   shell.openExternal(url)
+})
+ipcMain.handle('download-url', (_event, url: string) => {
+  mainWindow?.webContents.downloadURL(url)
 })
 ipcMain.handle('open-cloud-login', (_event, url: string) => {
   shell.openExternal(url)

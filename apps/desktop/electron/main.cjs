@@ -15958,12 +15958,24 @@ var mainWindow = null;
 var serverProcess = null;
 var tray = null;
 var isQuitting = false;
+function handleTraceUrl(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.pathname === "/auth/callback") {
+      const token = parsed.searchParams.get("token");
+      if (token) mainWindow?.webContents.send("cloud-auth-callback", token);
+    }
+  } catch {
+  }
+}
 var SERVER_PORT = 8765;
 var isDev = process.env.NODE_ENV === "development" || !import_electron.app.isPackaged;
 if (!import_electron.app.requestSingleInstanceLock()) {
   import_electron.app.quit();
 }
-import_electron.app.on("second-instance", () => {
+import_electron.app.on("second-instance", (_event, argv) => {
+  const url = argv.find((a) => a.startsWith("trace://"));
+  if (url) handleTraceUrl(url);
   showWindow();
 });
 function showWindow() {
@@ -16086,6 +16098,10 @@ function setupAutoUpdater() {
   });
 }
 import_electron.app.whenReady().then(async () => {
+  import_electron.app.setAsDefaultProtocolClient("trace");
+  import_electron.app.on("open-url", (_event, url) => {
+    handleTraceUrl(url);
+  });
   startServer();
   createWindow();
   createTray();
@@ -16118,6 +16134,9 @@ import_electron.ipcMain.handle("restart-and-install", () => {
   import_electron_updater.autoUpdater.quitAndInstall();
 });
 import_electron.ipcMain.handle("open-external", (_event, url) => {
+  import_electron.shell.openExternal(url);
+});
+import_electron.ipcMain.handle("open-cloud-login", (_event, url) => {
   import_electron.shell.openExternal(url);
 });
 /*! Bundled license information:
