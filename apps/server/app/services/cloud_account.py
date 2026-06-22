@@ -41,42 +41,53 @@ def register_device(token: str) -> bool:
 
 
 def sync_to_cloud(token: str):
-    """Batch-push unsynced Request rows (cloud_synced_at IS NULL) to CLOUD_API/sync/push."""
+    """Batch-push all unsynced Request rows (cloud_synced_at IS NULL) to CLOUD_API/sync/push."""
     from app.core.database import SessionLocal
     from app.models.models import Request
 
+    import httpx
+    BATCH = 500
+
     db = SessionLocal()
     try:
-        rows = (
-            db.query(Request)
-            .filter(Request.cloud_synced_at.is_(None))
-            .limit(500)
-            .all()
-        )
-        if not rows:
-            return
-
-        payload = [
-            {
-                "source": r.source,
-                "model": r.model,
-                "timestamp": r.timestamp.isoformat() if r.timestamp else None,
-                "session_id": r.session_id,
-                "input_tokens": r.input_tokens,
-                "output_tokens": r.output_tokens,
-                "cost": r.cost,
-            }
-            for r in rows
-        ]
-
-        import httpx
         with httpx.Client(timeout=15) as c:
-            resp = c.post(
-                f"{CLOUD_API}/sync/push",
-                json=payload,
-                headers={"Authorization": f"Bearer {token}"},
-            )
-            if resp.is_success:
+            while True:
+                rows = (
+                    db.query(Request)
+                    .filter(Request.cloud_synced_at.is_(None))
+                    .limit(BATCH)
+                    .all()
+                )
+                if not rows:
+                    break
+
+                payload = [
+                    {
+                        "source": r.source,
+                        "model": r.model,
+                        "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+                        "session_id": r.session_id,
+                        "input_tokens": r.input_tokens,
+                        "output_tokens": r.output_tokens,
+                        "cache_read_tokens": r.cache_read_tokens,
+                        "cache_write_tokens": r.cache_write_tokens,
+                        "cost": r.cost,
+                        "project": r.project,
+                        "branch": r.branch,
+                        "latency_ms": r.latency_ms,
+                    }
+                    for r in rows
+                ]
+
+                resp = c.post(
+                    f"{CLOUD_API}/sync/push",
+                    json=payload,
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                if not resp.is_success:
+                    print(f"[CloudAccount] sync/push returned {resp.status_code}, aborting batch")
+                    break
+
                 now = datetime.utcnow()
                 for r in rows:
                     r.cloud_synced_at = now

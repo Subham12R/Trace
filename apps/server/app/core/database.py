@@ -24,9 +24,14 @@ def _migrate_columns():
     with engine.connect() as conn:
         result = conn.execute(text("PRAGMA table_info(requests)"))
         columns = {row[1] for row in result.fetchall()}
-        if "branch" not in columns:
-            conn.execute(text("ALTER TABLE requests ADD COLUMN branch VARCHAR"))
-            conn.commit()
+        missing = {
+            "branch": "ALTER TABLE requests ADD COLUMN branch VARCHAR",
+            "cloud_synced_at": "ALTER TABLE requests ADD COLUMN cloud_synced_at DATETIME",
+        }
+        for col, stmt in missing.items():
+            if col not in columns:
+                conn.execute(text(stmt))
+        conn.commit()
 
 
 def init_db():

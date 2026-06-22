@@ -64,14 +64,14 @@ SOURCE_CONFIG: Dict[str, Dict] = {
         "defaults": ["~/.pi/agent/sessions"],
         "pattern": "**/*.{json,jsonl}",
         "domain": "pi.ai",
-        "logo_url": "/logos/pi.png",
+        "logo_url": None,
     },
     "goose": {
         "env": "GOOSE_PATH_ROOT",
         "defaults": ["~/.goose"],
         "pattern": "**/*.{json,jsonl}",
-        "domain": "block.github.io",
-        "logo_url": "/logos/goose.png",
+        "domain": "block.xyz",
+        "logo_url": None,
     },
     "openclaw": {
         "env": "OPENCLAW_DIR",
