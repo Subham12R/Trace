@@ -15961,7 +15961,7 @@ var isQuitting = false;
 function handleTraceUrl(url) {
   try {
     const parsed = new URL(url);
-    if (parsed.pathname === "/auth/callback") {
+    if (parsed.pathname === "/auth/callback" || parsed.host === "auth" && parsed.pathname === "/callback") {
       const token = parsed.searchParams.get("token");
       if (token) mainWindow?.webContents.send("cloud-auth-callback", token);
     }

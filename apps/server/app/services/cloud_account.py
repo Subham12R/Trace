@@ -24,6 +24,7 @@ def register_device(token: str) -> bool:
     """POST device info to CLOUD_API/devices/register."""
     try:
         import httpx
+        from app.services.auth import set_credential
         with httpx.Client(timeout=10) as c:
             r = c.post(
                 f"{CLOUD_API}/devices/register",
@@ -34,6 +35,14 @@ def register_device(token: str) -> bool:
                 },
                 headers={"Authorization": f"Bearer {token}"},
             )
+            if r.is_success:
+                try:
+                    data = r.json()
+                    device_id = data.get("id")
+                    if device_id:
+                        set_credential("trace-cloud-device-id", device_id)
+                except Exception as ex:
+                    print(f"[CloudAccount] failed to parse/store device id: {ex}")
             return r.is_success
     except Exception as e:
         print(f"[CloudAccount] register_device error: {e}")
@@ -79,10 +88,15 @@ def sync_to_cloud(token: str):
                     for r in rows
                 ]
 
+                headers = {"Authorization": f"Bearer {token}"}
+                device_id = get_credential("trace-cloud-device-id")
+                if device_id:
+                    headers["X-Device-Id"] = device_id
+
                 resp = c.post(
                     f"{CLOUD_API}/sync/push",
                     json=payload,
-                    headers={"Authorization": f"Bearer {token}"},
+                    headers=headers,
                 )
                 if not resp.is_success:
                     print(f"[CloudAccount] sync/push returned {resp.status_code}, aborting batch")

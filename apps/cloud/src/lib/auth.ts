@@ -1,6 +1,8 @@
+import "dotenv/config";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db/index.js";
+import { bearer } from "better-auth/plugins";
 
 // isProd drives SameSite/Secure cookie attributes.
 // Only use NODE_ENV so local dev over HTTP keeps SameSite=Lax / Secure=false.
@@ -8,6 +10,8 @@ const isProd = process.env.NODE_ENV === "production";
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, { provider: "pg" }),
+    baseURL: process.env.BETTER_AUTH_URL ?? "https://trace-fqbp.onrender.com",
+    plugins: [bearer()],
     emailAndPassword: { enabled: true },
     socialProviders: {
         github: {
