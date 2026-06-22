@@ -24,7 +24,6 @@ app.use(
             "http://localhost:3000",
             "http://localhost:3001",
             "https://traceanalytics.vercel.app",
-            "https://cloud.trace.app",
             "https://trace-fqbp.onrender.com",
         ],
         allowHeaders: ["Content-Type", "Authorization", "X-Device-Id"],

@@ -23,7 +23,6 @@ export const auth = betterAuth({
         "http://localhost:3000",
         "http://localhost:3001",
         "https://traceanalytics.vercel.app",
-        "https://cloud.trace.app",
         "https://trace-fqbp.onrender.com",
         "trace://",
     ],
