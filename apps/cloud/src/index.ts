@@ -73,7 +73,7 @@ app.get("/auth/login", (c) => {
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden;
       position: relative;
     }
     
@@ -113,7 +113,7 @@ app.get("/auth/login", (c) => {
       backdrop-filter: blur(16px);
       border: 1px solid var(--border);
       border-radius: 24px;
-      padding: 40px 32px;
+      padding: 36px 28px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
@@ -122,53 +122,77 @@ app.get("/auth/login", (c) => {
     }
     
     .logo-container {
-      width: 64px;
-      height: 64px;
+      width: 52px;
+      height: 52px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     }
     
     .logo-svg {
-      width: 32px;
-      height: 32px;
+      width: 26px;
+      height: 26px;
       fill: var(--primary);
     }
     
     h1 {
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 600;
       letter-spacing: -0.5px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
     
     .subtitle {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--text-muted);
-      margin-bottom: 36px;
-      line-height: 1.5;
+      margin-bottom: 28px;
+      line-height: 1.4;
     }
     
-    .button-group {
+    .form-group {
       width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      text-align: left;
+      margin-bottom: 16px;
+    }
+    
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    
+    input:focus {
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.04);
     }
     
     .btn {
       width: 100%;
-      padding: 14px 20px;
-      border-radius: 12px;
-      font-size: 15px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
       font-weight: 500;
       cursor: pointer;
       display: flex;
@@ -179,6 +203,49 @@ app.get("/auth/login", (c) => {
       text-decoration: none;
       border: none;
       outline: none;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: var(--bg);
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    
+    .divider {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 20px 0;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .divider:not(:empty)::before {
+      margin-right: .75em;
+    }
+    
+    .divider:not(:empty)::after {
+      margin-left: .75em;
+    }
+    
+    .button-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
     
     .btn-github {
@@ -205,12 +272,38 @@ app.get("/auth/login", (c) => {
     }
     
     .btn-svg {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
+    }
+    
+    .error-message {
+      width: 100%;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      text-align: left;
+      display: none;
+    }
+    
+    .toggle-mode {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    
+    .toggle-mode span {
+      color: var(--text);
+      cursor: pointer;
+      text-decoration: underline;
+      font-weight: 500;
     }
     
     .footer {
-      margin-top: 32px;
+      margin-top: 28px;
       font-size: 12px;
       color: var(--text-muted);
     }
@@ -233,8 +326,36 @@ app.get("/auth/login", (c) => {
           <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
         </svg>
       </div>
-      <h1>Trace Cloud</h1>
+      <h1 id="form-title">Sign in to Trace</h1>
       <p class="subtitle">Connect your Trace account to sync and manage your AI command usage analytics seamlessly.</p>
+      
+      <div id="error-message" class="error-message"></div>
+      
+      <form id="auth-form" style="width: 100%;" onsubmit="handleEmailAuth(event)">
+        <div id="name-field-group" class="form-group" style="display: none;">
+          <label for="input-name">Name</label>
+          <input type="text" id="input-name" placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label for="input-email">Email Address</label>
+          <input type="email" id="input-email" required placeholder="name@example.com">
+        </div>
+        <div class="form-group">
+          <label for="input-password">Password</label>
+          <input type="password" id="input-password" required placeholder="••••••••" minlength="8">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+          <span id="submit-btn-text">Sign In</span>
+        </button>
+      </form>
+      
+      <div class="toggle-mode">
+        <span id="toggle-text">Don't have an account?</span> 
+        <span id="toggle-link" onclick="toggleMode()">Sign up</span>
+      </div>
+      
+      <div class="divider">or continue with</div>
       
       <div class="button-group">
         <button type="button" onclick="signInWithSocial('github')" class="btn btn-github">
@@ -261,6 +382,68 @@ app.get("/auth/login", (c) => {
   </div>
   
   <script>
+    let isSignUpMode = false;
+
+    function toggleMode() {
+      isSignUpMode = !isSignUpMode;
+      const nameFieldGroup = document.getElementById('name-field-group');
+      const nameInput = document.getElementById('input-name');
+      const submitBtnText = document.getElementById('submit-btn-text');
+      const formTitle = document.getElementById('form-title');
+      const toggleText = document.getElementById('toggle-text');
+      const toggleLink = document.getElementById('toggle-link');
+      
+      if (isSignUpMode) {
+        nameFieldGroup.style.display = 'block';
+        nameInput.required = true;
+        submitBtnText.textContent = 'Create Account';
+        formTitle.textContent = 'Create your account';
+        toggleText.textContent = 'Already have an account?';
+        toggleLink.textContent = 'Sign in';
+      } else {
+        nameFieldGroup.style.display = 'none';
+        nameInput.required = false;
+        submitBtnText.textContent = 'Sign In';
+        formTitle.textContent = 'Sign in to Trace';
+        toggleText.textContent = "Don't have an account?";
+        toggleLink.textContent = 'Sign up';
+      }
+    }
+
+    async function handleEmailAuth(event) {
+      event.preventDefault();
+      const name = document.getElementById('input-name').value;
+      const email = document.getElementById('input-email').value;
+      const password = document.getElementById('input-password').value;
+      const errorMsg = document.getElementById('error-message');
+      
+      errorMsg.style.display = 'none';
+      
+      try {
+        let endpoint = isSignUpMode ? '/api/auth/sign-up/email' : '/api/auth/sign-in/email';
+        let bodyObj = isSignUpMode 
+          ? { email, password, name }
+          : { email, password };
+          
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bodyObj)
+        });
+        
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.message || 'Authentication failed (HTTP ' + response.status + ')');
+        }
+        
+        // Successful login/signup, redirect to callback to complete desktop link
+        window.location.href = '/auth/callback';
+      } catch (e) {
+        errorMsg.textContent = e.message;
+        errorMsg.style.display = 'block';
+      }
+    }
+
     async function signInWithSocial(provider) {
       try {
         const callbackURL = window.location.origin + '/auth/callback';
