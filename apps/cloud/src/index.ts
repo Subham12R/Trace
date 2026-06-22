@@ -490,6 +490,17 @@ app.get("/auth/callback", async (c) => {
         return c.redirect("/auth/login?error=no_session");
     }
     const token = session.session.token;
+
+    const redirectTo = c.req.query("redirect_to");
+    if (redirectTo) {
+        try {
+            const url = new URL(redirectTo);
+            url.searchParams.set("token", token);
+            return c.redirect(url.toString());
+        } catch (e) {
+            console.error("Malformed redirect_to URL:", redirectTo);
+        }
+    }
     
     return c.html(`<!DOCTYPE html>
 <html lang="en">
