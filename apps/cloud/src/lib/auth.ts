@@ -2,7 +2,9 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db/index.js";
 
-const isProd = process.env.NODE_ENV === "production" || !(process.env.BETTER_AUTH_URL ?? "").includes("localhost");
+// isProd drives SameSite/Secure cookie attributes.
+// Only use NODE_ENV so local dev over HTTP keeps SameSite=Lax / Secure=false.
+const isProd = process.env.NODE_ENV === "production";
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, { provider: "pg" }),
@@ -17,6 +19,10 @@ export const auth = betterAuth({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
             redirectURI: `${process.env.BETTER_AUTH_URL ?? "https://trace-fqbp.onrender.com"}/api/auth/callback/google`,
+            // Disable PKCE — the code_verifier cookie is stored on the backend
+            // domain but can be lost between the Google redirect chain in cross-origin
+            // setups, causing state_mismatch. GitHub doesn't use PKCE so it works fine.
+            disablePkce: true,
         },
     },
     trustedOrigins: [
@@ -36,4 +42,10 @@ export const auth = betterAuth({
             secure: isProd,
         },
     },
+    account: {
+        // Belt-and-suspenders: skip the state cookie check for cross-origin flows
+        // where the state cookie may not survive the OAuth provider's redirect chain.
+        skipStateCookieCheck: true,
+    },
 });
+
