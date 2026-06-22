@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 
 const CLOUD_LOGIN_URL = import.meta.env.VITE_TRACE_CLOUD_URL
   ? `${import.meta.env.VITE_TRACE_CLOUD_URL}/auth/login`
-  : "https://cloud.trace.app/auth/login";
+  : "https://trace-fqbp.onrender.com/auth/login";
 
 export function AccountPage() {
 	const { data: account, isLoading } = useCloudAccount();

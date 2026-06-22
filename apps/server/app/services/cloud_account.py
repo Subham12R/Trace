@@ -13,7 +13,7 @@ from typing import Optional
 
 from app.services.auth import get_credential, delete_credential
 
-CLOUD_API = os.environ.get("TRACE_CLOUD_URL", "https://cloud.trace.app")
+CLOUD_API = os.environ.get("TRACE_CLOUD_URL", "https://trace-fqbp.onrender.com")
 
 
 def get_cloud_token() -> Optional[str]:
