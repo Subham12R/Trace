@@ -490,7 +490,177 @@ app.get("/auth/callback", async (c) => {
         return c.redirect("/auth/login?error=no_session");
     }
     const token = session.session.token;
-    return c.redirect(`trace://auth/callback?token=${token}`);
+    
+    return c.html(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trace Cloud - Connecting...</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --card: rgba(24, 24, 27, 0.6);
+      --border: rgba(63, 63, 70, 0.4);
+      --text: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --primary: #ffffff;
+      --primary-hover: #e4e4e7;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+    
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(120, 119, 198, 0.1) 0%, rgba(0,0,0,0) 70%);
+      top: -10%;
+      left: -10%;
+      z-index: 0;
+    }
+    
+    .container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 440px;
+      padding: 24px;
+    }
+    
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .status-icon {
+      width: 64px;
+      height: 64px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      color: #22c55e;
+    }
+    
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: var(--bg);
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    
+    .footer {
+      margin-top: 24px;
+      font-size: 13px;
+    }
+    
+    .footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    
+    .footer a:hover {
+      color: var(--text);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="status-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h1>Connected!</h1>
+      <p class="subtitle">Successfully authenticated. We're opening the Trace Desktop app to link your account...</p>
+      
+      <a id="launch-btn" href="trace://auth/callback?token=${token}" class="btn btn-primary">
+        Open Trace Desktop
+      </a>
+      
+      <div class="footer">
+        <a href="/auth/login">Back to Login</a>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const tokenUrl = "trace://auth/callback?token=${token}";
+    // Auto-launch the app
+    window.location.href = tokenUrl;
+    
+    // Fallback automatic triggers
+    setTimeout(() => {
+      window.location.href = tokenUrl;
+    }, 500);
+  </script>
+</body>
+</html>`);
 });
 
 app.route("/account", accountRoutes);
