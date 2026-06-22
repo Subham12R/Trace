@@ -12,7 +12,8 @@
     "lint": "cd apps/desktop && npm run lint"
   },
   "workspaces": [
-    "apps/*"
+    "apps/desktop",
+    "apps/server"
   ],
   "devDependencies": {
     "7zip-bin": "^5.2.0"
