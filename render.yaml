@@ -1,8 +1,7 @@
 services:
   - type: web
     name: trace-cloud
-    runtime: node
-    repo: https://github.com/Subham12R/Trace
+    env: node
     branch: main
     rootDir: apps/cloud
     buildCommand: npm install && npm run build
