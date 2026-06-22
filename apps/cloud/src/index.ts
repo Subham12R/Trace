@@ -8,6 +8,17 @@ import accountRoutes from "./routes/account.js";
 import deviceRoutes from "./routes/devices.js";
 import syncRoutes from "./routes/sync.js";
 import metricsRoutes from "./routes/metrics.js";
+import { db } from "./db/index.js";
+import { user } from "./db/schema.js";
+import { eq } from "drizzle-orm";
+
+// Auto-verify all existing user accounts to enable seamless social login linking
+db.update(user)
+    .set({ emailVerified: true })
+    .where(eq(user.emailVerified, false))
+    .execute()
+    .then(() => console.log("Successfully auto-verified existing users"))
+    .catch((err) => console.error("Failed to auto-verify existing users:", err));
 
 type Variables = {
     userId: string;

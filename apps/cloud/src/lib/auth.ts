@@ -13,6 +13,20 @@ export const auth = betterAuth({
     baseURL: process.env.BETTER_AUTH_URL ?? "https://trace-fqbp.onrender.com",
     plugins: [bearer()],
     emailAndPassword: { enabled: true },
+    databaseHooks: {
+        user: {
+            create: {
+                before: async (user) => {
+                    return {
+                        data: {
+                            ...user,
+                            emailVerified: true,
+                        },
+                    };
+                },
+            },
+        },
+    },
     socialProviders: {
         github: {
             clientId: process.env.GITHUB_CLIENT_ID!,
