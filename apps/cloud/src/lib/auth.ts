@@ -46,6 +46,9 @@ export const auth = betterAuth({
         // Belt-and-suspenders: skip the state cookie check for cross-origin flows
         // where the state cookie may not survive the OAuth provider's redirect chain.
         skipStateCookieCheck: true,
+        accountLinking: {
+            enabled: true,
+        },
     },
 });
 
