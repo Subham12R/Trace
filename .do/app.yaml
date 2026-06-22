@@ -24,6 +24,9 @@ services:
       - key: PORT
         value: "3001"
         scope: RUN_AND_BUILD_TIME
+      - key: BETTER_AUTH_URL
+        value: https://cloud.trace.app
+        scope: RUN_TIME
       - key: DATABASE_URL
         scope: RUN_TIME
         type: SECRET
