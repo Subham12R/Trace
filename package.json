@@ -19,5 +19,8 @@
   },
   "overrides": {
     "7zip-bin": "^5.2.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
   }
 }

@@ -15970,6 +15970,7 @@ function handleTraceUrl(url) {
 }
 var SERVER_PORT = 8765;
 var isDev = process.env.NODE_ENV === "development" || !import_electron.app.isPackaged;
+var ICON_PATH = isDev ? path.join(__dirname, "../public/images/icon.png") : path.join(__dirname, "../dist/images/icon.png");
 if (!import_electron.app.requestSingleInstanceLock()) {
   import_electron.app.quit();
 }
@@ -15985,7 +15986,7 @@ function showWindow() {
   mainWindow.focus();
 }
 function createTray() {
-  const iconPath = path.join(__dirname, "../public/images/icon.png");
+  const iconPath = ICON_PATH;
   const icon = import_electron.nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
   tray = new import_electron.Tray(icon);
   tray.setToolTip("Trace");
@@ -16015,7 +16016,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     titleBarStyle: "hiddenInset",
-    icon: path.join(__dirname, "../public/images/icon.png"),
+    icon: ICON_PATH,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -16135,6 +16136,9 @@ import_electron.ipcMain.handle("restart-and-install", () => {
 });
 import_electron.ipcMain.handle("open-external", (_event, url) => {
   import_electron.shell.openExternal(url);
+});
+import_electron.ipcMain.handle("download-url", (_event, url) => {
+  mainWindow?.webContents.downloadURL(url);
 });
 import_electron.ipcMain.handle("open-cloud-login", (_event, url) => {
   import_electron.shell.openExternal(url);
