@@ -11,7 +11,7 @@
     "electron:dev": "electron .",
     "build:server": "powershell -ExecutionPolicy Bypass -File ..\\server\\build.ps1",
     "build:server:mac": "bash ../server/build.sh",
-    "build:electron-main": "npx esbuild electron/main.ts --bundle --platform=node --target=node20 --format=cjs --outfile=electron/main.cjs --external:electron",
+    "build:electron-main": "npx esbuild electron/main.ts --bundle --platform=node --target=node20 --format=cjs --outfile=electron/main.cjs --external:electron && npx esbuild electron/preload.ts --bundle --platform=node --target=node20 --format=cjs --outfile=electron/preload.cjs --external:electron",
     "electron:build": "npm run build:electron-main && npm run build:server && vite build && electron-builder",
     "electron:build:mac": "npm run build:electron-main && npm run build:server:mac && npx vite build && electron-builder --mac",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
