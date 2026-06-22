@@ -48,4 +48,15 @@ app.get("/", requireAuth, async (c) => {
     return c.json(rows);
 });
 
+app.delete("/:id", requireAuth, async (c) => {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+    const existing = await db.query.devices.findFirst({
+        where: and(eq(devices.id, id), eq(devices.userId, userId)),
+    });
+    if (!existing) return c.json({ error: "not found" }, 404);
+    await db.delete(devices).where(eq(devices.id, id));
+    return c.json({ deleted: true });
+});
+
 export default app;
