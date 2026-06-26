@@ -184,7 +184,7 @@ export function TrayWidget() {
         <div className="flex items-center justify-between">
           <span className={cn('text-xs', dark ? 'text-white/50' : 'text-zinc-400')}>This week</span>
           <span className={cn('text-xs tabular-nums', mid)}>
-            {usage ? <>{usage.weekly.tokens.toLocaleString()} tok&nbsp;·&nbsp;{fmtCost(usage.weekly.cost)}</> : '—'}
+            {usage ? <>{usage.weekly.tokens.toLocaleString()} tokens &nbsp;|&nbsp;{fmtCost(usage.weekly.cost)}</> : '—'}
           </span>
         </div>
 
