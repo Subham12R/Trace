@@ -518,30 +518,37 @@ interface TooltipPanelProps {
 }
 
 function TooltipPanel({ rolling, weekly, dark, open }: TooltipPanelProps) {
-  const panelStyle: React.CSSProperties = dark
+  // Two-layer liquid glass — same shell as LiquidButton, rounded-2xl instead of rounded-full
+  const outerStyle: React.CSSProperties = dark
     ? {
-        background: 'linear-gradient(160deg, rgba(30,30,35,0.88) 0%, rgba(18,18,22,0.82) 100%)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.10)',
+        background:
+          'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 24%, rgba(255,255,255,0.08) 100%)',
         boxShadow:
-          'inset 0px 1px 0px rgba(255,255,255,0.06), 0px 8px 32px rgba(0,0,0,0.45), 0px 2px 8px rgba(0,0,0,0.25)',
-        borderRadius: 16,
+          'inset 0px 4px 6.1px 0px rgba(255,255,255,0.08), 2px 23px 14px 0px rgba(0,0,0,0.08), 1px 10px 10px 0px rgba(0,0,0,0.10), 0px 3px 6px 0px rgba(0,0,0,0.08)',
+        borderRadius: 18,
+        padding: 2,
       }
     : {
-        background: 'linear-gradient(160deg, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.55) 100%)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.55)',
+        background:
+          'linear-gradient(180deg, rgb(245,245,245) 0%, rgba(101,104,111,0.39) 24%, rgba(255,255,255,0.75) 100%)',
         boxShadow:
-          'inset 0px 1px 0px rgba(255,255,255,0.65), 0px 8px 32px rgba(0,0,0,0.08), 0px 2px 8px rgba(0,0,0,0.04)',
-        borderRadius: 16,
+          'inset 0px 4px 6.1px 0px rgba(255,255,255,0.23), 2px 23px 14px 0px rgba(0,0,0,0.02), 1px 10px 10px 0px rgba(0,0,0,0.03), 0px 3px 6px 0px rgba(0,0,0,0.03)',
+        borderRadius: 18,
+        padding: 2,
       }
+
+  const innerStyle: React.CSSProperties = {
+    background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.6)',
+    backdropFilter: 'blur(16px) saturate(180%)',
+    borderRadius: 16,
+  }
 
   const dividerStyle: React.CSSProperties = {
     borderColor: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
   }
 
   const labelStyle: React.CSSProperties = {
-    textShadow: dark ? '0px 1px 0px rgba(0,0,0,0.4)' : '0px 1px 0px rgba(255,255,255,0.6)',
+    textShadow: dark ? '0px 1px 0px rgba(0,0,0,0.4)' : '0px 1px 0px rgba(255,255,255,0.46)',
   }
 
   return (
@@ -552,70 +559,63 @@ function TooltipPanel({ rolling, weekly, dark, open }: TooltipPanelProps) {
       }}
       animate={open ? 'visible' : 'hidden'}
       transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-      style={panelStyle}
-      className="w-60 px-4 py-3 select-none"
+      style={outerStyle}
+      className="w-60 select-none"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-2">
-        <img
-          src={`${import.meta.env.BASE_URL}logos/claude.svg`}
-          alt="Claude"
-          className="size-4"
-        />
-        <span
-          className={cn(
-            'text-xs font-semibold',
-            dark ? 'text-white/90' : 'text-zinc-700',
-          )}
-          style={labelStyle}
-        >
-          5-hr Window
-        </span>
-      </div>
+      {/* Inner frosted layer — identical to LiquidButton's inner span */}
+      <div style={innerStyle} className="px-4 py-3">
 
-      {/* Progress bar + percent */}
-      <div className="flex items-center gap-2 mb-1">
-        <div className="flex-1 h-1.5 rounded-full overflow-hidden bg-black/10 dark:bg-white/10">
-          <div
-            className={cn('h-full rounded-full transition-all duration-500', batteryColor(rolling.percent))}
-            style={{ width: `${rolling.percent}%` }}
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-2">
+          <img
+            src={`${import.meta.env.BASE_URL}logos/claude.svg`}
+            alt="Claude"
+            className="size-4"
           />
+          <span
+            className={cn('text-xs font-semibold', dark ? 'text-white/90' : 'text-zinc-700')}
+            style={labelStyle}
+          >
+            5-hr Window
+          </span>
         </div>
-        <span
-          className={cn('text-xs tabular-nums font-medium', dark ? 'text-white/80' : 'text-zinc-600')}
-        >
-          {rolling.percent.toFixed(0)}%
-        </span>
-      </div>
 
-      {/* Token count */}
-      <p
-        className={cn('text-xs tabular-nums', dark ? 'text-white/50' : 'text-zinc-400')}
-      >
-        {fmt(rolling.used)} / {fmt(rolling.limit)} tokens
-      </p>
+        {/* Progress bar + percent */}
+        <div className="flex items-center gap-2 mb-1">
+          <div className="flex-1 h-1.5 rounded-full overflow-hidden bg-black/10 dark:bg-white/10">
+            <div
+              className={cn('h-full rounded-full transition-all duration-500', batteryColor(rolling.percent))}
+              style={{ width: `${rolling.percent}%` }}
+            />
+          </div>
+          <span className={cn('text-xs tabular-nums font-medium', dark ? 'text-white/80' : 'text-zinc-600')}>
+            {rolling.percent.toFixed(0)}%
+          </span>
+        </div>
 
-      {/* Reset time */}
-      {rolling.reset_at && (
-        <p className={cn('text-xs mt-0.5', dark ? 'text-white/40' : 'text-zinc-400')}>
-          Resets {fmtResetTime(rolling.reset_at)}
+        {/* Token count */}
+        <p className={cn('text-xs tabular-nums', dark ? 'text-white/50' : 'text-zinc-400')}>
+          {fmt(rolling.used)} / {fmt(rolling.limit)} tokens
         </p>
-      )}
 
-      {/* Divider */}
-      <div
-        className="border-t my-2.5"
-        style={dividerStyle}
-      />
+        {/* Reset time */}
+        {rolling.reset_at && (
+          <p className={cn('text-xs mt-0.5', dark ? 'text-white/40' : 'text-zinc-400')}>
+            Resets {fmtResetTime(rolling.reset_at)}
+          </p>
+        )}
 
-      {/* Weekly row */}
-      <div className="flex items-center justify-between">
-        <span className={cn('text-xs', dark ? 'text-white/50' : 'text-zinc-400')}>
-          This week
-        </span>
-        <span className={cn('text-xs tabular-nums', dark ? 'text-white/70' : 'text-zinc-600')}>
-          {fmt(weekly.tokens)} tok&nbsp;·&nbsp;{fmtCost(weekly.cost)}
-        </span>
+        {/* Divider */}
+        <div className="border-t my-2.5" style={dividerStyle} />
+
+        {/* Weekly row */}
+        <div className="flex items-center justify-between">
+          <span className={cn('text-xs', dark ? 'text-white/50' : 'text-zinc-400')}>This week</span>
+          <span className={cn('text-xs tabular-nums', dark ? 'text-white/70' : 'text-zinc-600')}>
+            {fmt(weekly.tokens)} tok&nbsp;·&nbsp;{fmtCost(weekly.cost)}
+          </span>
+        </div>
+
       </div>
     </motion.div>
   )
