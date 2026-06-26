@@ -241,3 +241,25 @@ export function useCloudAccount() {
     staleTime: 20000,
   })
 }
+
+export interface ClaudeUsage {
+  rolling: {
+    used: number
+    limit: number
+    percent: number
+    reset_at: string
+  } | null
+  weekly: {
+    tokens: number
+    cost: number
+  }
+}
+
+export function useClaudeUsage() {
+  return useQuery<ClaudeUsage>({
+    queryKey: ['system', 'usage'],
+    queryFn: () => api.get('/api/system/usage'),
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  })
+}
