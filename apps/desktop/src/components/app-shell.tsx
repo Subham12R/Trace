@@ -4,9 +4,11 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { useThemeStore } from "@/stores/themeStore";
 import { ThemeToggle } from "./ThemeToggle";
 import { RefreshButton } from "./RefreshButton";
+import { SystemWidget } from "./SystemWidget";
 import { UpdateBanner } from "./UpdateBanner";
 import { OfflineBanner } from "./OfflineBanner";
 import { useServerStatus } from "@/hooks/useServerStatus";
+import { motion } from "motion/react";
 
 const ACCENT_GLOWS: Record<string, string> = {
 	ink: "from-neutral-500/[0.04] via-transparent to-neutral-700/[0.04] dark:from-neutral-900/15 dark:to-neutral-950/15",
@@ -51,6 +53,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 					</div>
 					<div className="flex items-center gap-2">
 						<RefreshButton variant="outline" className="size-9 p-0 flex items-center justify-center" />
+						<motion.div
+							className="relative group"
+							whileHover={{ scale: 1.02 }}
+							whileTap={{ scale: 0.98 }}
+						>
+							<SystemWidget className="size-9 p-0 flex items-center justify-center" />
+						</motion.div>
 						<ThemeToggle compact />
 					</div>
 				</header>
