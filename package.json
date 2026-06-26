@@ -7,7 +7,7 @@
     "dev": "node dev.js",
     "dev:desktop": "cd apps/desktop && npm run dev",
     "dev:electron": "cd apps/desktop && npm run electron:dev",
-    "dev:server": "cd apps/server && py -3.12 start.py",
+    "dev:server": "cd apps/server && .venv/bin/python start.py",
     "build:desktop": "cd apps/desktop && npm run build",
     "lint": "cd apps/desktop && npm run lint"
   },

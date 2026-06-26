@@ -15986,7 +15986,7 @@ function showWindow() {
   mainWindow.show();
   mainWindow.focus();
 }
-var WIDGET_WIDTH = 296;
+var WIDGET_WIDTH = 320;
 function positionWidget() {
   if (!widgetWindow || !tray) return;
   const trayBounds = tray.getBounds();
@@ -15995,37 +15995,48 @@ function positionWidget() {
   const y = process.platform === "darwin" ? Math.round(trayBounds.y + trayBounds.height + 4) : Math.round(trayBounds.y - winH - 4);
   widgetWindow.setPosition(x, y, false);
 }
+function createWidgetWindow() {
+  if (widgetWindow) return;
+  widgetWindow = new import_electron.BrowserWindow({
+    width: WIDGET_WIDTH,
+    height: 320,
+    // 'panel' makes this an NSPanel so it can float over another app's
+    // fullscreen Space without macOS switching Spaces to reach it.
+    ...process.platform === "darwin" ? { type: "panel" } : {},
+    frame: false,
+    transparent: true,
+    hasShadow: false,
+    backgroundColor: "#00000000",
+    resizable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    show: false,
+    useContentSize: true,
+    roundedCorners: false,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.cjs"),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+  const widgetUrl = isDev ? "http://localhost:5173/?tray=1" : `file://${path.join(__dirname, "../dist/index.html")}?tray=1`;
+  widgetWindow.loadURL(widgetUrl);
+  widgetWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
+  widgetWindow.setAlwaysOnTop(true, "screen-saver");
+  widgetWindow.on("blur", () => widgetWindow?.hide());
+  widgetWindow.on("show", () => widgetWindow?.webContents.send("tray-shown"));
+  widgetWindow.on("closed", () => {
+    widgetWindow = null;
+  });
+}
 function toggleWidget() {
-  if (!widgetWindow) {
-    widgetWindow = new import_electron.BrowserWindow({
-      width: WIDGET_WIDTH,
-      height: 320,
-      frame: false,
-      transparent: true,
-      resizable: false,
-      skipTaskbar: true,
-      alwaysOnTop: true,
-      show: false,
-      useContentSize: true,
-      webPreferences: {
-        preload: path.join(__dirname, "preload.cjs"),
-        contextIsolation: true,
-        nodeIntegration: false
-      }
-    });
-    const widgetUrl = isDev ? "http://localhost:5173/?tray=1" : `file://${path.join(__dirname, "../dist/index.html")}?tray=1`;
-    widgetWindow.loadURL(widgetUrl);
-    widgetWindow.on("blur", () => widgetWindow?.hide());
-    widgetWindow.on("closed", () => {
-      widgetWindow = null;
-    });
-  }
+  if (!widgetWindow) createWidgetWindow();
+  if (!widgetWindow) return;
   if (widgetWindow.isVisible()) {
     widgetWindow.hide();
   } else {
     positionWidget();
-    widgetWindow.show();
-    widgetWindow.focus();
+    widgetWindow.showInactive();
   }
 }
 function createTray() {
@@ -16047,9 +16058,10 @@ function createTray() {
   tray.on("click", toggleWidget);
   tray.on("right-click", () => tray.popUpContextMenu(menu));
 }
-function createWindow() {
+function createWindow(opts = {}) {
+  const show = opts.show ?? true;
   if (mainWindow) {
-    showWindow();
+    if (show) showWindow();
     return;
   }
   import_electron.Menu.setApplicationMenu(null);
@@ -16059,6 +16071,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     frame: false,
+    show,
     icon: ICON_PATH,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
@@ -16149,8 +16162,10 @@ import_electron.app.whenReady().then(async () => {
     handleTraceUrl(url);
   });
   startServer();
-  createWindow();
+  const launchedAtLogin = import_electron.app.getLoginItemSettings().wasOpenedAtLogin || process.argv.includes("--hidden");
+  createWindow({ show: !launchedAtLogin });
   createTray();
+  createWidgetWindow();
   setupAutoUpdater();
   if (!isDev) {
     try {
@@ -16195,6 +16210,15 @@ import_electron.ipcMain.handle("download-url", (_event, url) => {
 });
 import_electron.ipcMain.handle("open-cloud-login", (_event, url) => {
   import_electron.shell.openExternal(url);
+});
+import_electron.ipcMain.handle("get-launch-at-login", () => import_electron.app.getLoginItemSettings().openAtLogin);
+import_electron.ipcMain.handle("set-launch-at-login", (_event, enabled) => {
+  import_electron.app.setLoginItemSettings({
+    openAtLogin: enabled,
+    openAsHidden: true,
+    args: ["--hidden"]
+  });
+  return import_electron.app.getLoginItemSettings().openAtLogin;
 });
 import_electron.ipcMain.handle("open-settings", () => {
   mainWindow?.webContents.send("open-settings-ui");

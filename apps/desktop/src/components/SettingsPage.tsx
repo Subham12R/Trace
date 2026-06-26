@@ -1,13 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useProviders, useAuthStatus, useProxyStatus, connectProvider, disconnectProvider } from "@/hooks/useMetrics";
-import { XCircle, Folder, Cloud, Lock, Eye, EyeOff, Download, Radio } from "lucide-react";
+import { XCircle, Folder, Cloud, Lock, Eye, EyeOff, Download, Radio, Power } from "lucide-react";
 import { ProviderLogo } from "./ProviderLogo";
 import { LiquidButton } from "@/components/ui/LiquidButton";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getBaseUrl } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 const CLOUD_PROVIDERS = [
   {
@@ -198,6 +199,9 @@ export function SettingsPage() {
 						</p>
 					</CardContent>
 				</Card>
+
+				{/* General */}
+				<GeneralCard />
 			</div>
 		</div>
 	);
@@ -299,5 +303,74 @@ function CloudProviderCard({
 				</div>
 			)}
 		</div>
+	);
+}
+
+function GeneralCard() {
+	const [enabled, setEnabled] = useState(false);
+	const [loaded, setLoaded] = useState(false);
+	const supported = typeof window !== "undefined" && !!window.electronAPI?.getLaunchAtLogin;
+
+	useEffect(() => {
+		if (!supported) return;
+		window.electronAPI.getLaunchAtLogin().then((v) => {
+			setEnabled(v);
+			setLoaded(true);
+		});
+	}, [supported]);
+
+	const toggle = async () => {
+		if (!supported) return;
+		const next = !enabled;
+		setEnabled(next);
+		try {
+			const applied = await window.electronAPI.setLaunchAtLogin(next);
+			setEnabled(applied);
+			toast.success(applied ? "Launch at login enabled" : "Launch at login disabled");
+		} catch {
+			setEnabled(!next);
+			toast.error("Failed to update launch setting");
+		}
+	};
+
+	return (
+		<Card className="liquid-card p-4 rounded-[14px]">
+			<CardHeader>
+				<CardTitle className="text-lg font-semibold text-[var(--app-ink)] flex items-center gap-2">
+					<Power className="size-4" />
+					General
+				</CardTitle>
+				<CardDescription className="text-[var(--app-muted)]">
+					System behavior and startup
+				</CardDescription>
+			</CardHeader>
+			<CardContent className="mt-4">
+				<div className="flex items-center justify-between p-3 rounded-[10px] liquid-row">
+					<div className="pr-4">
+						<p className="text-sm font-medium text-[var(--app-ink)]">Launch at login</p>
+						<p className="text-[11px] text-[var(--app-muted)] mt-0.5">
+							Start the Trace server and menu bar widget when you log in. The main window stays hidden until you open it.
+						</p>
+					</div>
+					<button
+						role="switch"
+						aria-checked={enabled}
+						disabled={!supported || !loaded}
+						onClick={toggle}
+						className={cn(
+							"relative shrink-0 w-10 h-6 rounded-full transition-colors disabled:opacity-50",
+							enabled ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700"
+						)}
+					>
+						<span
+							className={cn(
+								"absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-sm transition-transform",
+								enabled && "translate-x-4"
+							)}
+						/>
+					</button>
+				</div>
+			</CardContent>
+		</Card>
 	);
 }

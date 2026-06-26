@@ -32,4 +32,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('cloud-auth-callback', handler)
     return () => ipcRenderer.removeListener('cloud-auth-callback', handler)
   },
+  onTrayShown: (cb: () => void) => {
+    ipcRenderer.on('tray-shown', cb)
+    return () => ipcRenderer.removeListener('tray-shown', cb)
+  },
+  getLaunchAtLogin: () => ipcRenderer.invoke('get-launch-at-login'),
+  setLaunchAtLogin: (enabled: boolean) => ipcRenderer.invoke('set-launch-at-login', enabled),
 })

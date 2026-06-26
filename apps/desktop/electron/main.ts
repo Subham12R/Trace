@@ -48,7 +48,7 @@ function showWindow() {
   mainWindow.focus()
 }
 
-const WIDGET_WIDTH = 296
+const WIDGET_WIDTH = 320
 
 // Anchor the widget centered on the tray icon: above it on Windows (taskbar
 // usually bottom), below it on macOS (menu bar top).
@@ -63,38 +63,60 @@ function positionWidget() {
   widgetWindow.setPosition(x, y, false)
 }
 
+// Build the tray widget once, at startup, and configure its Space/level
+// behavior a single time. Re-applying collection behavior on a live window
+// while another app is fullscreen is what makes macOS animate to a different
+// Space — so all of that happens here, before any fullscreen app is focused,
+// and toggleWidget() below only ever shows/hides it.
+function createWidgetWindow() {
+  if (widgetWindow) return
+  widgetWindow = new BrowserWindow({
+    width: WIDGET_WIDTH,
+    height: 320,
+    // 'panel' makes this an NSPanel so it can float over another app's
+    // fullscreen Space without macOS switching Spaces to reach it.
+    ...(process.platform === 'darwin' ? { type: 'panel' as const } : {}),
+    frame: false,
+    transparent: true,
+    hasShadow: false,
+    backgroundColor: '#00000000',
+    resizable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    show: false,
+    useContentSize: true,
+    roundedCorners: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  })
+  const widgetUrl = isDev
+    ? 'http://localhost:5173/?tray=1'
+    : `file://${path.join(__dirname, '../dist/index.html')}?tray=1`
+  widgetWindow.loadURL(widgetUrl)
+  // Join every Space (incl. other apps' fullscreen) and sit above fullscreen
+  // chrome. 'screen-saver' is the level that actually clears a fullscreen
+  // window; 'pop-up-menu' does not. skipTransformProcessType keeps the app
+  // from re-activating (which would also pull the focused Space).
+  widgetWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true })
+  widgetWindow.setAlwaysOnTop(true, 'screen-saver')
+  widgetWindow.on('blur', () => widgetWindow?.hide())
+  widgetWindow.on('show', () => widgetWindow?.webContents.send('tray-shown'))
+  // Recreate on the rare chance it gets destroyed, so the next toggle works.
+  widgetWindow.on('closed', () => { widgetWindow = null })
+}
+
 function toggleWidget() {
-  if (!widgetWindow) {
-    widgetWindow = new BrowserWindow({
-      width: WIDGET_WIDTH,
-      height: 320,
-      frame: false,
-      transparent: true,
-      resizable: false,
-      skipTaskbar: true,
-      alwaysOnTop: true,
-      show: false,
-      useContentSize: true,
-      webPreferences: {
-        preload: path.join(__dirname, 'preload.cjs'),
-        contextIsolation: true,
-        nodeIntegration: false,
-      },
-    })
-    const widgetUrl = isDev
-      ? 'http://localhost:5173/?tray=1'
-      : `file://${path.join(__dirname, '../dist/index.html')}?tray=1`
-    widgetWindow.loadURL(widgetUrl)
-    widgetWindow.on('blur', () => widgetWindow?.hide())
-    widgetWindow.on('closed', () => { widgetWindow = null })
-  }
+  if (!widgetWindow) createWidgetWindow()
+  if (!widgetWindow) return
 
   if (widgetWindow.isVisible()) {
     widgetWindow.hide()
   } else {
     positionWidget()
-    widgetWindow.show()
-    widgetWindow.focus()
+    widgetWindow.showInactive()
   }
 }
 
@@ -121,10 +143,12 @@ function createTray() {
   tray.on('right-click', () => tray!.popUpContextMenu(menu))
 }
 
-function createWindow() {
+function createWindow(opts: { show?: boolean } = {}) {
+  const show = opts.show ?? true
+
   // Guard: if a window already exists, just focus it
   if (mainWindow) {
-    showWindow()
+    if (show) showWindow()
     return
   }
 
@@ -135,6 +159,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     frame: false,
+    show,
     icon: ICON_PATH,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -253,11 +278,18 @@ app.whenReady().then(async () => {
 
   startServer()
 
+  // When launched at login, stay headless: only the server + tray run.
+  // The window is still created (hidden) so "Show Trace" works instantly.
+  const launchedAtLogin =
+    app.getLoginItemSettings().wasOpenedAtLogin ||
+    process.argv.includes('--hidden')
+
   // Create the window immediately so there is never a windowless gap that
   // causes 'activate' to open a second window while the server is starting.
   // The frontend handles the connecting state via React Query retries.
-  createWindow()
+  createWindow({ show: !launchedAtLogin })
   createTray()
+  createWidgetWindow()
   setupAutoUpdater()
 
   if (!isDev) {
@@ -310,6 +342,15 @@ ipcMain.handle('download-url', (_event, url: string) => {
 })
 ipcMain.handle('open-cloud-login', (_event, url: string) => {
   shell.openExternal(url)
+})
+ipcMain.handle('get-launch-at-login', () => app.getLoginItemSettings().openAtLogin)
+ipcMain.handle('set-launch-at-login', (_event, enabled: boolean) => {
+  app.setLoginItemSettings({
+    openAtLogin: enabled,
+    openAsHidden: true,
+    args: ['--hidden'],
+  })
+  return app.getLoginItemSettings().openAtLogin
 })
 ipcMain.handle('open-settings', () => {
   mainWindow?.webContents.send('open-settings-ui')

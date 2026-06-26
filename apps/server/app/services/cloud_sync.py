@@ -1,10 +1,13 @@
+import getpass
 import json
 import os
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 import httpx
+import keyring
 
 from app.services.auth import get_credential
 from app.core.database import SessionLocal
@@ -127,7 +130,22 @@ def _store_anthropic_usage(usage_data: List[Dict[str, Any]]):
 
 
 def _load_claude_credentials() -> Optional[Dict[str, Any]]:
-    """Read Claude Code OAuth credentials from ~/.claude/.credentials.json."""
+    """Read Claude Code OAuth credentials.
+
+    On macOS, Claude Code stores credentials in the login Keychain under
+    service "Claude Code-credentials" with the macOS username as the account.
+    On Linux/Windows, falls back to the on-disk credentials file.
+    """
+    if sys.platform == "darwin":
+        try:
+            raw = keyring.get_password("Claude Code-credentials", getpass.getuser())
+            if raw:
+                oauth = json.loads(raw).get("claudeAiOauth", {})
+                if oauth.get("accessToken"):
+                    return oauth
+        except Exception as e:
+            print(f"[CloudSync] Failed to read Claude Keychain entry: {e}")
+
     paths = [
         Path.home() / ".claude" / ".credentials.json",
         Path.home() / ".config" / "claude" / ".credentials.json",

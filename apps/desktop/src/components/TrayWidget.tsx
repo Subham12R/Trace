@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts'
 import { useClaudeUsage, useQuota, useModels, useTrends, type QuotaLimit } from '@/hooks/useMetrics'
 import { useThemeStore } from '@/stores/themeStore'
@@ -75,6 +76,7 @@ export function TrayWidget() {
   const initTheme = useThemeStore((s) => s.init)
   const dark = useThemeStore((s) => s.resolved) === 'dark'
   const setThemeState = useThemeStore.setState
+  const queryClient = useQueryClient()
 
   const { data: usage } = useClaudeUsage()
   const { data: quotas } = useQuota()
@@ -91,6 +93,15 @@ export function TrayWidget() {
     })
     return () => unsub?.()
   }, [setThemeState])
+
+  // Force refetch whenever the tray window becomes visible — intervals pause
+  // while the window is hidden, so a freshly-shown widget can show stale data.
+  useEffect(() => {
+    const unsub = window.electronAPI?.onTrayShown?.(() => {
+      queryClient.invalidateQueries()
+    })
+    return () => unsub?.()
+  }, [queryClient])
 
   // Collapse per-source trend rows into one input/output series per time bucket.
   const trendData = useMemo(() => {
@@ -136,8 +147,16 @@ export function TrayWidget() {
   const topModels = (models ?? []).slice(0, 3)
 
   return (
-    <div ref={rootRef} className="p-2">
-      <div className="liquid-card rounded-2xl px-4 py-3 w-[272px] select-none shadow-2xl">
+    <div ref={rootRef} className="px-4  pb-6">
+      <div
+        className={cn(
+          'rounded-xl px-4 py-2.5 w-[272px] select-none border backdrop-blur-xl',
+          'shadow-[0_10px_30px_-6px_rgba(0,0,0,0.45),0_2px_8px_-2px_rgba(0,0,0,0.3)]',
+          dark
+            ? 'bg-[#2b2b2d]/95 border-white/[0.08]'
+            : 'bg-[#f6f6f6]/95 border-black/[0.08]'
+        )}
+      >
 
         {/* Header */}
         <div className="flex items-center gap-2 mb-2.5">
@@ -178,7 +197,7 @@ export function TrayWidget() {
         )}
 
         {/* Divider */}
-        <div className="border-t my-2.5 border-[var(--app-hairline)]" />
+        <div className={cn('border-t -mx-4 my-2.5', dark ? 'border-white/[0.08]' : 'border-black/[0.08]')} />
 
         {/* This week */}
         <div className="flex items-center justify-between">
@@ -191,7 +210,7 @@ export function TrayWidget() {
         {/* Usage trend (today) */}
         {trendData.length > 1 && (
           <>
-            <div className="border-t my-2.5 border-[var(--app-hairline)]" />
+            <div className={cn('border-t -mx-4 my-2.5', dark ? 'border-white/[0.08]' : 'border-black/[0.08]')} />
             <p className={cn('text-[10px] uppercase tracking-wide mb-1.5', muted)}>Usage today</p>
             <ChartContainer config={trendConfig} className="aspect-auto h-20 w-full">
               <AreaChart data={trendData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
@@ -218,7 +237,7 @@ export function TrayWidget() {
         {/* Top models today */}
         {topModels.length > 0 && (
           <>
-            <div className="border-t my-2.5 border-[var(--app-hairline)]" />
+            <div className={cn('border-t -mx-4 my-2.5', dark ? 'border-white/[0.08]' : 'border-black/[0.08]')} />
             <p className={cn('text-[10px] uppercase tracking-wide mb-2', muted)}>Top models today</p>
             <div className="space-y-2">
               {topModels.map((m) => (

@@ -33,5 +33,11 @@ import_electron.contextBridge.exposeInMainWorld("electronAPI", {
     const handler = (_event, token) => cb(token);
     import_electron.ipcRenderer.on("cloud-auth-callback", handler);
     return () => import_electron.ipcRenderer.removeListener("cloud-auth-callback", handler);
-  }
+  },
+  onTrayShown: (cb) => {
+    import_electron.ipcRenderer.on("tray-shown", cb);
+    return () => import_electron.ipcRenderer.removeListener("tray-shown", cb);
+  },
+  getLaunchAtLogin: () => import_electron.ipcRenderer.invoke("get-launch-at-login"),
+  setLaunchAtLogin: (enabled) => import_electron.ipcRenderer.invoke("set-launch-at-login", enabled)
 });

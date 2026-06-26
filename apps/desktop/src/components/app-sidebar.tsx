@@ -67,7 +67,7 @@ export function AppSidebar() {
 						<img
 							src={`${import.meta.env.BASE_URL}images/icon.png`}
 							alt="Trace"
-							className="size-9 group-data-[collapsible=icon]:size-8 object-contain rounded-xl shrink-0"
+							className="size-9 group-data-[collapsible=icon]:size-8 object-contain rounded-xl shrink-0 invert dark:invert-0"
 						/>
 						<div className="flex flex-col leading-[1.1] group-data-[collapsible=icon]:hidden">
 							<span className="text-lg font-semibold tracking-tight text-[var(--app-ink)]">Trace</span>
@@ -153,7 +153,7 @@ export function AppSidebar() {
 								"liquid-shell group flex items-center gap-3 rounded-xl p-2 transition-all w-full",
 								"group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:p-0",
 								"group-data-[collapsible=icon]:!bg-none group-data-[collapsible=icon]:!shadow-none",
-								"group-data-[collapsible=icon]:justify-center",
+								"group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:mx-auto",
 								menuOpen && "opacity-90"
 							)}
 						>

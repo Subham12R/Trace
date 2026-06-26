@@ -130,6 +130,12 @@
     color: var(--app-ink);
     transition: background-color 200ms ease, color 200ms ease;
   }
+  html.tray-mode,
+  html.tray-mode body,
+  html.tray-mode #root {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
   h1, h2, h3, h4, h5, h6 {
     font-family: "Helvetica Trace", "Helvetica Neue", Helvetica, Arial, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     letter-spacing: -0.02em;
@@ -209,9 +215,9 @@
   /* Premium Flat Card Shell and Inner (used for home/dashboard cards) */
   .liquid-card-shell {
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.16) 100%);
-    box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.08), 
-                0 8px 16px -8px rgba(0, 0, 0, 0.04), 
-                0 2px 4px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.01), 
+                0 8px 16px -8px rgba(0, 0, 0, 0.01), 
+                0 2px 4px rgba(0, 0, 0, 0.01);
   }
   .dark .liquid-card-shell {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);

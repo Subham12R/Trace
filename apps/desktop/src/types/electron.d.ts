@@ -18,5 +18,8 @@ interface Window {
     resizeTrayWidget: (height: number) => Promise<void>
     broadcastTheme: (mode: string, resolved: string, accent: string) => Promise<void>
     onThemeChanged: (cb: (mode: string, resolved: string, accent: string) => void) => () => void
+    onTrayShown: (cb: () => void) => () => void
+    getLaunchAtLogin: () => Promise<boolean>
+    setLaunchAtLogin: (enabled: boolean) => Promise<boolean>
   }
 }
