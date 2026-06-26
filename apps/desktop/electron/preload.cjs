@@ -19,6 +19,12 @@ import_electron.contextBridge.exposeInMainWorld("electronAPI", {
   downloadUrl: (url) => import_electron.ipcRenderer.invoke("download-url", url),
   openCloudLogin: (url) => import_electron.ipcRenderer.invoke("open-cloud-login", url),
   resizeTrayWidget: (height) => import_electron.ipcRenderer.invoke("resize-tray-widget", height),
+  broadcastTheme: (mode, resolved, accent) => import_electron.ipcRenderer.invoke("broadcast-theme", mode, resolved, accent),
+  onThemeChanged: (cb) => {
+    const handler = (_event, mode, resolved, accent) => cb(mode, resolved, accent);
+    import_electron.ipcRenderer.on("theme-changed", handler);
+    return () => import_electron.ipcRenderer.removeListener("theme-changed", handler);
+  },
   onUpdateDownloaded: (cb) => {
     import_electron.ipcRenderer.on("update-downloaded", cb);
     return () => import_electron.ipcRenderer.removeListener("update-downloaded", cb);

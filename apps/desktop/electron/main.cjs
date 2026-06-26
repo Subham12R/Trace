@@ -16199,6 +16199,9 @@ import_electron.ipcMain.handle("open-cloud-login", (_event, url) => {
 import_electron.ipcMain.handle("open-settings", () => {
   mainWindow?.webContents.send("open-settings-ui");
 });
+import_electron.ipcMain.handle("broadcast-theme", (_event, mode, resolved, accent) => {
+  widgetWindow?.webContents.send("theme-changed", mode, resolved, accent);
+});
 import_electron.ipcMain.handle("resize-tray-widget", (_event, height) => {
   if (!widgetWindow) return;
   const h = Math.max(80, Math.ceil(height));
