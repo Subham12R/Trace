@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Cloud, LogOut, RefreshCw, CheckCircle } from "lucide-react";
 import { useCloudAccount } from "@/hooks/useMetrics";
 import { api } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { LiquidButton } from "@/components/ui/LiquidButton";
+import { LiquidCard } from "@/components/ui/LiquidCard";
 
 const CLOUD_LOGIN_URL = import.meta.env.VITE_TRACE_CLOUD_URL
   ? `${import.meta.env.VITE_TRACE_CLOUD_URL}/auth/login`
@@ -14,21 +16,6 @@ export function AccountPage() {
 	const { data: account, isLoading } = useCloudAccount();
 	const [isBusy, setIsBusy] = useState(false);
 	const queryClient = useQueryClient();
-
-	// Listen for the OAuth callback token from Electron
-	useEffect(() => {
-		if (!window.electronAPI?.onCloudAuthCallback) return;
-		const unsubscribe = window.electronAPI.onCloudAuthCallback(async (token: string) => {
-			try {
-				await api.post("/api/cloud/token", { credential: token });
-				queryClient.invalidateQueries({ queryKey: ["cloud", "account"] });
-				toast.success("Trace Cloud connected");
-			} catch {
-				toast.error("Failed to store cloud token");
-			}
-		});
-		return unsubscribe;
-	}, [queryClient]);
 
 	const handleLogin = () => {
 		if (window.electronAPI?.openCloudLogin) {
@@ -64,13 +51,13 @@ export function AccountPage() {
 	};
 
 	return (
-		<div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
+		<div className="h-full overflow-y-auto no-scrollbar apple-scroll-fade p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
 			<div className="mb-6 lg:mb-8">
 				<h1 className="text-xl sm:text-2xl font-semibold text-[var(--app-ink)]">Account</h1>
 				<p className="text-sm text-[var(--app-muted)] mt-1">Manage your Trace Cloud connection</p>
 			</div>
 
-			<div className="bg-[var(--app-soft)] rounded-2xl border-2 border-[var(--app-hairline)] p-6 card-depth">
+			<LiquidCard className="p-6" height="h-auto">
 				{isLoading ? (
 					<p className="text-sm text-[var(--app-muted)]">Loading…</p>
 				) : account?.logged_in ? (
@@ -92,27 +79,30 @@ export function AccountPage() {
 						</div>
 
 						<div className="flex gap-2 pt-2">
-							<button
+							<LiquidButton
 								onClick={handleSync}
 								disabled={isBusy}
-								className="flex items-center gap-1.5 px-4 py-1.5 text-xs rounded-full font-medium bg-[var(--app-soft)] text-[var(--app-ink)] hover:bg-[var(--app-hairline)] transition-colors disabled:opacity-50 border border-[var(--app-hairline)]"
+								className="text-xs disabled:opacity-50"
+								innerClassName="px-4 py-1.5"
 							>
 								<RefreshCw className="size-3" />
 								{isBusy ? "Syncing…" : "Sync now"}
-							</button>
-							<button
+							</LiquidButton>
+							<LiquidButton
 								onClick={handleLogout}
 								disabled={isBusy}
-								className="flex items-center gap-1.5 px-4 py-1.5 text-xs rounded-full font-medium bg-[var(--app-soft)] text-[var(--app-muted)] hover:bg-[var(--app-hairline)] transition-colors disabled:opacity-50 border border-[var(--app-hairline)]"
+								className="text-xs disabled:opacity-50"
+								innerClassName="px-4 py-1.5"
+								textColor="var(--app-muted)"
 							>
 								<LogOut className="size-3" />
 								{isBusy ? "Logging out…" : "Logout"}
-							</button>
+							</LiquidButton>
 						</div>
 					</div>
 				) : (
 					<div className="flex flex-col items-center gap-4 py-6 text-center">
-						<div className="size-14 rounded-2xl bg-[var(--app-canvas)] border-2 border-[var(--app-hairline)] flex items-center justify-center">
+						<div className="size-14 rounded-2xl liquid-row flex items-center justify-center">
 							<Cloud className="size-7 text-[var(--app-muted)]" />
 						</div>
 						<div>
@@ -121,15 +111,12 @@ export function AccountPage() {
 								Sync your usage data to the cloud to access it from the web dashboard and across devices.
 							</p>
 						</div>
-						<button
-							onClick={handleLogin}
-							className="px-6 py-2 text-sm rounded-full font-medium bg-[var(--app-ink)] text-[var(--app-canvas)] hover:bg-[var(--app-ink)]/90 transition-colors"
-						>
+						<LiquidButton onClick={handleLogin} innerClassName="px-6 py-2">
 							Login with Trace Cloud
-						</button>
+						</LiquidButton>
 					</div>
 				)}
-			</div>
+			</LiquidCard>
 		</div>
 	);
 }

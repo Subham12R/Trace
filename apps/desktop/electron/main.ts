@@ -6,6 +6,7 @@ import * as os from 'os'
 import * as http from 'http'
 
 let mainWindow: BrowserWindow | null = null
+let widgetWindow: BrowserWindow | null = null
 let serverProcess: ReturnType<typeof spawn> | null = null
 let tray: Tray | null = null
 let isQuitting = false
@@ -47,14 +48,64 @@ function showWindow() {
   mainWindow.focus()
 }
 
+const WIDGET_WIDTH = 296
+
+// Anchor the widget centered on the tray icon: above it on Windows (taskbar
+// usually bottom), below it on macOS (menu bar top).
+function positionWidget() {
+  if (!widgetWindow || !tray) return
+  const trayBounds = tray.getBounds()
+  const { width: winW, height: winH } = widgetWindow.getBounds()
+  const x = Math.round(trayBounds.x + trayBounds.width / 2 - winW / 2)
+  const y = process.platform === 'darwin'
+    ? Math.round(trayBounds.y + trayBounds.height + 4)
+    : Math.round(trayBounds.y - winH - 4)
+  widgetWindow.setPosition(x, y, false)
+}
+
+function toggleWidget() {
+  if (!widgetWindow) {
+    widgetWindow = new BrowserWindow({
+      width: WIDGET_WIDTH,
+      height: 320,
+      frame: false,
+      transparent: true,
+      resizable: false,
+      skipTaskbar: true,
+      alwaysOnTop: true,
+      show: false,
+      useContentSize: true,
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.cjs'),
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    })
+    const widgetUrl = isDev
+      ? 'http://localhost:5173/?tray=1'
+      : `file://${path.join(__dirname, '../dist/index.html')}?tray=1`
+    widgetWindow.loadURL(widgetUrl)
+    widgetWindow.on('blur', () => widgetWindow?.hide())
+    widgetWindow.on('closed', () => { widgetWindow = null })
+  }
+
+  if (widgetWindow.isVisible()) {
+    widgetWindow.hide()
+  } else {
+    positionWidget()
+    widgetWindow.show()
+    widgetWindow.focus()
+  }
+}
+
 function createTray() {
-  const iconPath = ICON_PATH
-  const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 })
+  const icon = nativeImage.createFromPath(ICON_PATH).resize({ width: 16, height: 16 })
   tray = new Tray(icon)
   tray.setToolTip('Trace')
 
   const menu = Menu.buildFromTemplate([
-    { label: 'Open Trace', click: showWindow },
+    { label: 'Show Trace', click: showWindow },
+    { label: 'Settings', click: () => mainWindow?.webContents.send('open-settings') },
     { type: 'separator' },
     {
       label: 'Quit',
@@ -64,8 +115,10 @@ function createTray() {
       },
     },
   ])
-  tray.setContextMenu(menu)
-  tray.on('double-click', showWindow)
+
+  // Left click → usage widget popup; right click → context menu
+  tray.on('click', toggleWidget)
+  tray.on('right-click', () => tray!.popUpContextMenu(menu))
 }
 
 function createWindow() {
@@ -81,7 +134,7 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    titleBarStyle: 'hiddenInset',
+    frame: false,
     icon: ICON_PATH,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -119,6 +172,10 @@ function createWindow() {
   win.on('closed', () => {
     if (mainWindow === win) mainWindow = null
   })
+
+  // Keep the renderer's maximize/restore icon in sync with the real state.
+  win.on('maximize', () => win.webContents.send('window-maximized-changed', true))
+  win.on('unmaximize', () => win.webContents.send('window-maximized-changed', false))
 }
 
 function startServer() {
@@ -231,6 +288,14 @@ app.on('before-quit', () => {
 })
 
 // IPC handlers
+ipcMain.handle('window-minimize', () => mainWindow?.minimize())
+ipcMain.handle('window-toggle-maximize', () => {
+  if (!mainWindow) return
+  if (mainWindow.isMaximized()) mainWindow.unmaximize()
+  else mainWindow.maximize()
+})
+ipcMain.handle('window-close', () => mainWindow?.close())
+ipcMain.handle('window-is-maximized', () => mainWindow?.isMaximized() ?? false)
 ipcMain.handle('get-server-port', () => SERVER_PORT)
 ipcMain.handle('get-app-version', () => app.getVersion())
 ipcMain.handle('restart-and-install', () => {
@@ -245,4 +310,21 @@ ipcMain.handle('download-url', (_event, url: string) => {
 })
 ipcMain.handle('open-cloud-login', (_event, url: string) => {
   shell.openExternal(url)
+})
+ipcMain.handle('open-settings', () => {
+  mainWindow?.webContents.send('open-settings-ui')
+})
+// Forward theme changes from the main window to the tray widget so both
+// renderers stay in sync (they have separate localStorage / Zustand stores).
+ipcMain.handle('broadcast-theme', (_event, mode: string, resolved: string, accent: string) => {
+  widgetWindow?.webContents.send('theme-changed', mode, resolved, accent)
+})
+
+// The tray widget measures its rendered content and reports the height it
+// needs so the frameless window wraps it exactly — no scrollbar, no empty gap.
+ipcMain.handle('resize-tray-widget', (_event, height: number) => {
+  if (!widgetWindow) return
+  const h = Math.max(80, Math.ceil(height))
+  widgetWindow.setContentSize(WIDGET_WIDTH, h)
+  if (widgetWindow.isVisible()) positionWidget()
 })

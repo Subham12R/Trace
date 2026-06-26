@@ -1,0 +1,7 @@
+- generic [active]:
+  - generic:
+    - button "Get Started" [ref=e5] [cursor=pointer]:
+      - generic [ref=e7]:
+        - text: Get Started
+        - img [ref=e8]
+    - region "Notifications alt+T"

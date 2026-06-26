@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 
 export function RefreshButton({
 	className,
-	variant = "dark",
 }: {
 	className?: string;
+	/** Retained for call-site compatibility; styling is now liquid glass. */
 	variant?: "dark" | "light" | "outline";
 }) {
 	const { mutate, isPending } = useRefresh();
@@ -15,16 +15,15 @@ export function RefreshButton({
 		<button
 			onClick={() => mutate()}
 			disabled={isPending}
+			aria-label="Refresh"
 			className={cn(
-				"inline-flex items-center gap-2 px-2.5 py-2.5 text-xs sm:text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-				variant === "dark" && "bg-ink text-canvas hover:opacity-90",
-				variant === "light" && "bg-canvas/10 text-canvas border border-canvas/20 hover:bg-canvas/20 backdrop-blur-sm",
-				variant === "outline" && "border border-hairline bg-soft text-ink hover:border-muted/40",
-				className
+				"liquid-shell inline-flex items-center justify-center rounded-full p-[2px] transition-opacity hover:opacity-90 active:opacity-75 disabled:opacity-50 disabled:cursor-not-allowed",
+				className,
 			)}
 		>
-			<RefreshCw className={cn("size-3.5 sm:size-4", isPending && "animate-spin")} />
-			
+			<span className="liquid-inner flex size-9 items-center justify-center rounded-full text-[var(--app-ink)]">
+				<RefreshCw className={cn("size-4", isPending && "animate-spin")} />
+			</span>
 		</button>
 	);
 }

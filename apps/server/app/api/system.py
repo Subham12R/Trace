@@ -2,7 +2,6 @@ import getpass
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -10,7 +9,6 @@ from sqlalchemy import func
 
 from app.core.database import SessionLocal
 from app.models.models import Request
-from app.services.cloud_sync import fetch_claude_oauth_usage
 
 router = APIRouter()
 
@@ -20,20 +18,12 @@ class SystemUser(BaseModel):
     avatar_url: str | None = None
 
 
-class RollingUsage(BaseModel):
-    used: int
-    limit: int
-    percent: float
-    reset_at: str
-
-
 class WeeklyUsage(BaseModel):
     tokens: int
     cost: float
 
 
 class ClaudeUsageResponse(BaseModel):
-    rolling: Optional[RollingUsage]
     weekly: WeeklyUsage
 
 
@@ -53,34 +43,6 @@ def _find_windows_account_picture() -> str | None:
     if candidates:
         return candidates[0].as_uri()
     return None
-
-
-def _parse_rolling(raw: dict | None) -> Optional[RollingUsage]:
-    """
-    Parse the Claude OAuth usage response into RollingUsage.
-
-    The real response shape (observed 2026-06):
-      raw["five_hour"]["utilization"] -> float percent (0-100)
-      raw["five_hour"]["resets_at"]   -> ISO 8601 string
-    The session limit exposes only a utilization percentage, not absolute
-    message counts, so used=percent and limit=100 faithfully represent the data.
-    """
-    if not raw or not isinstance(raw, dict):
-        return None
-    try:
-        five_hour = raw.get("five_hour")
-        if not five_hour or not isinstance(five_hour, dict):
-            return None
-        percent = five_hour.get("utilization")
-        reset_at = five_hour.get("resets_at") or ""
-        if percent is None:
-            return None
-        percent = float(percent)
-        used = int(round(percent))
-        limit = 100
-        return RollingUsage(used=used, limit=limit, percent=round(percent, 1), reset_at=str(reset_at))
-    except Exception:
-        return None
 
 
 def _weekly_usage() -> WeeklyUsage:
@@ -130,7 +92,10 @@ def get_system_user():
 
 @router.get("/usage", response_model=ClaudeUsageResponse)
 def get_claude_usage():
-    raw = fetch_claude_oauth_usage()
-    rolling = _parse_rolling(raw)
-    weekly = _weekly_usage()
-    return ClaudeUsageResponse(rolling=rolling, weekly=weekly)
+    """Weekly Claude token/cost totals from the local DB.
+
+    Quota windows (5-hour / weekly utilization) come from /api/metrics/quota,
+    which owns the single cached OAuth call — this endpoint stays DB-only so we
+    don't double up on the rate-limited OAuth usage API.
+    """
+    return ClaudeUsageResponse(weekly=_weekly_usage())

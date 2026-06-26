@@ -243,12 +243,6 @@ export function useCloudAccount() {
 }
 
 export interface ClaudeUsage {
-  rolling: {
-    used: number
-    limit: number
-    percent: number
-    reset_at: string
-  } | null
   weekly: {
     tokens: number
     cost: number

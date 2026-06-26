@@ -14,5 +14,12 @@ export function extractModelName(model: string | null | undefined): string {
 		}
 	}
 
+	// Local / HuggingFace style paths, e.g. "models/llm/models/Qwen2.5-7B" or
+	// "meta-llama/Llama-3-8B" — show the final path segment as the name.
+	if (model.includes("/")) {
+		const segment = model.split("/").filter(Boolean).pop();
+		if (segment) return segment;
+	}
+
 	return model;
 }

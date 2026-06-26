@@ -15955,6 +15955,7 @@ var path = __toESM(require("path"), 1);
 var os = __toESM(require("os"), 1);
 var http = __toESM(require("http"), 1);
 var mainWindow = null;
+var widgetWindow = null;
 var serverProcess = null;
 var tray = null;
 var isQuitting = false;
@@ -15985,13 +15986,55 @@ function showWindow() {
   mainWindow.show();
   mainWindow.focus();
 }
+var WIDGET_WIDTH = 296;
+function positionWidget() {
+  if (!widgetWindow || !tray) return;
+  const trayBounds = tray.getBounds();
+  const { width: winW, height: winH } = widgetWindow.getBounds();
+  const x = Math.round(trayBounds.x + trayBounds.width / 2 - winW / 2);
+  const y = process.platform === "darwin" ? Math.round(trayBounds.y + trayBounds.height + 4) : Math.round(trayBounds.y - winH - 4);
+  widgetWindow.setPosition(x, y, false);
+}
+function toggleWidget() {
+  if (!widgetWindow) {
+    widgetWindow = new import_electron.BrowserWindow({
+      width: WIDGET_WIDTH,
+      height: 320,
+      frame: false,
+      transparent: true,
+      resizable: false,
+      skipTaskbar: true,
+      alwaysOnTop: true,
+      show: false,
+      useContentSize: true,
+      webPreferences: {
+        preload: path.join(__dirname, "preload.cjs"),
+        contextIsolation: true,
+        nodeIntegration: false
+      }
+    });
+    const widgetUrl = isDev ? "http://localhost:5173/?tray=1" : `file://${path.join(__dirname, "../dist/index.html")}?tray=1`;
+    widgetWindow.loadURL(widgetUrl);
+    widgetWindow.on("blur", () => widgetWindow?.hide());
+    widgetWindow.on("closed", () => {
+      widgetWindow = null;
+    });
+  }
+  if (widgetWindow.isVisible()) {
+    widgetWindow.hide();
+  } else {
+    positionWidget();
+    widgetWindow.show();
+    widgetWindow.focus();
+  }
+}
 function createTray() {
-  const iconPath = ICON_PATH;
-  const icon = import_electron.nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
+  const icon = import_electron.nativeImage.createFromPath(ICON_PATH).resize({ width: 16, height: 16 });
   tray = new import_electron.Tray(icon);
   tray.setToolTip("Trace");
   const menu = import_electron.Menu.buildFromTemplate([
-    { label: "Open Trace", click: showWindow },
+    { label: "Show Trace", click: showWindow },
+    { label: "Settings", click: () => mainWindow?.webContents.send("open-settings") },
     { type: "separator" },
     {
       label: "Quit",
@@ -16001,8 +16044,8 @@ function createTray() {
       }
     }
   ]);
-  tray.setContextMenu(menu);
-  tray.on("double-click", showWindow);
+  tray.on("click", toggleWidget);
+  tray.on("right-click", () => tray.popUpContextMenu(menu));
 }
 function createWindow() {
   if (mainWindow) {
@@ -16015,7 +16058,7 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    titleBarStyle: "hiddenInset",
+    frame: false,
     icon: ICON_PATH,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
@@ -16044,6 +16087,8 @@ function createWindow() {
   win.on("closed", () => {
     if (mainWindow === win) mainWindow = null;
   });
+  win.on("maximize", () => win.webContents.send("window-maximized-changed", true));
+  win.on("unmaximize", () => win.webContents.send("window-maximized-changed", false));
 }
 function startServer() {
   if (isDev) {
@@ -16128,6 +16173,14 @@ import_electron.app.on("before-quit", () => {
   isQuitting = true;
   stopServer();
 });
+import_electron.ipcMain.handle("window-minimize", () => mainWindow?.minimize());
+import_electron.ipcMain.handle("window-toggle-maximize", () => {
+  if (!mainWindow) return;
+  if (mainWindow.isMaximized()) mainWindow.unmaximize();
+  else mainWindow.maximize();
+});
+import_electron.ipcMain.handle("window-close", () => mainWindow?.close());
+import_electron.ipcMain.handle("window-is-maximized", () => mainWindow?.isMaximized() ?? false);
 import_electron.ipcMain.handle("get-server-port", () => SERVER_PORT);
 import_electron.ipcMain.handle("get-app-version", () => import_electron.app.getVersion());
 import_electron.ipcMain.handle("restart-and-install", () => {
@@ -16142,6 +16195,15 @@ import_electron.ipcMain.handle("download-url", (_event, url) => {
 });
 import_electron.ipcMain.handle("open-cloud-login", (_event, url) => {
   import_electron.shell.openExternal(url);
+});
+import_electron.ipcMain.handle("open-settings", () => {
+  mainWindow?.webContents.send("open-settings-ui");
+});
+import_electron.ipcMain.handle("resize-tray-widget", (_event, height) => {
+  if (!widgetWindow) return;
+  const h = Math.max(80, Math.ceil(height));
+  widgetWindow.setContentSize(WIDGET_WIDTH, h);
+  if (widgetWindow.isVisible()) positionWidget();
 });
 /*! Bundled license information:
 

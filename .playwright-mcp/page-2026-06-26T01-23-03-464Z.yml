@@ -1,0 +1,19 @@
+- generic [active]:
+  - generic:
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - heading "Set up your profile" [level=2] [ref=e11]
+        - paragraph [ref=e12]: Personalize your Trace dashboard
+      - generic [ref=e13]:
+        - button "R" [ref=e14] [cursor=pointer]:
+          - generic [ref=e15]: R
+          - img [ref=e17]
+        - paragraph [ref=e20]: Tap to add a photo
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]: Your name
+          - textbox "Enter your name" [ref=e24]: Rikk4
+        - button "Continue" [ref=e25] [cursor=pointer]:
+          - text: Continue
+          - img [ref=e26]
+    - region "Notifications alt+T"

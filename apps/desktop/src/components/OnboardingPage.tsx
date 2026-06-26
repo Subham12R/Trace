@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSystemUser } from "@/hooks/useMetrics";
 import { Camera, ArrowRight } from "lucide-react";
+import { LiquidButton } from "@/components/ui/LiquidButton";
 import { cn } from "@/lib/utils";
 
 const ONBOARDED_KEY = "trace-onboarded";
@@ -88,13 +89,10 @@ export function OnboardingPage({ onComplete }: { onComplete: () => void }) {
 			{/* Intro step */}
 			{step === "intro" && (
 				<div className="absolute bottom-10 items-end text-center px-6">
-					<button
-						onClick={() => setStep("form")}
-						className="group flex items-center gap-2  px-8 py-2 rounded-full bg-[#fffbf7] text-[#171717] text-sm font-semibold shadow-lg hover:bg-[#f5f2ef] transition-all"
-					>
+					<LiquidButton onClick={() => setStep("form")} className="group text-sm shadow-lg" innerClassName="px-8 py-2">
 						Get Started
 						<ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
-					</button>
+					</LiquidButton>
 				</div>
 			)}
 
@@ -138,14 +136,15 @@ export function OnboardingPage({ onComplete }: { onComplete: () => void }) {
 								/>
 							</div>
 
-							<button
+							<LiquidButton
 								onClick={handleStart}
 								disabled={userLoading || !name.trim()}
-								className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#171717] text-[#fffbf7] text-sm font-medium hover:bg-[#39393b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+								className="w-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+								innerClassName="w-full px-5 py-3"
 							>
 								Continue
 								<ArrowRight className="size-4" />
-							</button>
+							</LiquidButton>
 						</div>
 					</div>
 				</div>

@@ -1,50 +1,25 @@
-const PROVIDER_COLORS: Record<string, string> = {
-	claude: "#d97757", // Warm rust / terracotta
-	anthropic: "#d97757",
-	openai: "#10a37f", // OpenAI emerald green
-	gemini: "#4285f4", // Gemini blue
-	gemma: "#f2a900", // Gemma amber / gold
-	kimi: "#ff9d00", // Moonshot / Kimi orange
-	moonshot: "#ff9d00",
-	meta: "#0467df", // Meta blue
-	llama: "#0467df",
-	mistral: "#fa520f", // Mistral orange
-	deepseek: "#4d6bfe", // DeepSeek blue
-	qwen: "#615ced", // Qwen purple
-	opencode: "#a855f7", // OpenCode purple
-	ollama: "#858585", // Ollama grey
-	perplexity: "#20808d", // Perplexity teal
-	groq: "#f59e0b", // Groq amber
-	cursor: "#00bcd4", // Cursor — bright cyan
-	antigravity: "#34a853", // Antigravity — Google green
-	codex: "#10a37f", // OpenAI Codex — same as OpenAI
-	copilot: "#6e40c9", // GitHub Copilot purple
-	geminicode: "#4285f4",
-};
-
-const FALLBACK_COLORS = [
-	"#d97757", // Warm rust
-	"#10a37f", // Emerald
-	"#4285f4", // Blue
-	"#a855f7", // Purple
-	"#ec4899", // Pink
-	"#06b6d4", // Cyan
-	"#f59e0b", // Amber
-	"#14b8a6", // Teal
-	"#6366f1", // Indigo
+// Charts are grayscale. These mid-range zinc shades read on both the light
+// and dark canvases, and the ramp keeps multiple series distinguishable.
+const GRAYSCALE = [
+	"#52525b", // zinc-600
+	"#a1a1aa", // zinc-400
+	"#3f3f46", // zinc-700
+	"#71717a", // zinc-500
+	"#d4d4d8", // zinc-300
+	"#646464",
+	"#b8b8b8",
+	"#8a8a8a",
 ];
 
+function hashIndex(s: string): number {
+	let h = 0;
+	for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+	return h;
+}
+
 export function getProviderColor(provider: string | null | undefined, index: number = 0): string {
-	if (!provider) return FALLBACK_COLORS[index % FALLBACK_COLORS.length];
-	const key = provider.toLowerCase().trim();
-	if (PROVIDER_COLORS[key]) {
-		return PROVIDER_COLORS[key];
-	}
-	// Try fuzzy matching
-	for (const [name, color] of Object.entries(PROVIDER_COLORS)) {
-		if (key.includes(name) || name.includes(key)) {
-			return color;
-		}
-	}
-	return FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+	// Use the series index when given (multi-series charts); otherwise derive a
+	// stable shade from the provider name so single bars still vary per provider.
+	const i = index > 0 ? index : hashIndex(provider ?? "");
+	return GRAYSCALE[i % GRAYSCALE.length];
 }

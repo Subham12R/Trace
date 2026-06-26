@@ -17,11 +17,11 @@ interface CostPieChartProps {
 }
 
 const PIE_COLORS = [
-	"hsl(30 30% 45%)",
-	"hsl(30 25% 55%)",
-	"hsl(30 20% 65%)",
-	"hsl(30 18% 75%)",
-	"hsl(30 15% 85%)",
+	"hsl(0 0% 35%)",
+	"hsl(0 0% 47%)",
+	"hsl(0 0% 58%)",
+	"hsl(0 0% 70%)",
+	"hsl(0 0% 82%)",
 ];
 
 export function CostPieChart({ models }: CostPieChartProps) {

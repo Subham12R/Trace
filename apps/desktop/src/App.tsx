@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { HomePage } from "@/components/HomePage";
 import { DetailedAnalysisPage } from "@/components/DetailedAnalysisPage";
@@ -10,16 +12,33 @@ import { AccountPage } from "@/components/AccountPage";
 import { OnboardingPage, isOnboarded } from "@/components/OnboardingPage";
 import { getHash } from "@/components/app-shared";
 import { Toaster } from "@/components/ui/sonner";
+import { api } from "@/lib/api";
 
 export default function App() {
 	const [page, setPage] = useState(getHash());
 	const [onboarded, setOnboarded] = useState(isOnboarded());
+	const queryClient = useQueryClient();
 
 	useEffect(() => {
 		const handleHashChange = () => setPage(getHash());
 		window.addEventListener("hashchange", handleHashChange);
 		return () => window.removeEventListener("hashchange", handleHashChange);
 	}, []);
+
+	useEffect(() => {
+		if (!window.electronAPI?.onCloudAuthCallback) return;
+		const unsubscribe = window.electronAPI.onCloudAuthCallback(async (token: string) => {
+			try {
+				await api.post("/api/cloud/token", { credential: token });
+				queryClient.invalidateQueries({ queryKey: ["cloud", "account"] });
+				window.location.hash = "/account";
+				toast.success("Trace Cloud connected");
+			} catch {
+				toast.error("Failed to store cloud token");
+			}
+		});
+		return unsubscribe;
+	}, [queryClient]);
 
 	const renderPage = () => {
 		switch (page) {

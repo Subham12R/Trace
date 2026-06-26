@@ -58,6 +58,13 @@ const SOURCE_RULES: Record<string, ArtRule> = {
 const DEFAULT_ART: ModelArt = { src: null, accent: NEUTRAL, family: "Model" };
 
 export function getModelArt(model: string | null | undefined, source?: string | null): ModelArt {
+	// Local / HuggingFace model paths (e.g. "models/llm/models/…", "org/repo")
+	// carry no brand signal of their own — badge them with the Hugging Face art.
+	const raw = (typeof model === "string" ? model : "").toLowerCase();
+	if (/models\/llm\/models\//.test(raw) || raw.includes("huggingface")) {
+		return { src: `${B}logos/hugging.png`, accent: "#ffd21e", family: "Hugging Face" };
+	}
+
 	const name = extractModelName(model).toLowerCase();
 
 	for (const rule of MODEL_RULES) {

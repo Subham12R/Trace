@@ -27,6 +27,11 @@ function apply(resolved: 'light' | 'dark') {
   }
 }
 
+function broadcast(mode: ThemeMode, resolved: 'light' | 'dark', accent: string) {
+  // Only the main window has this API; in the tray renderer it may be absent.
+  window.electronAPI?.broadcastTheme?.(mode, resolved, accent)
+}
+
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
@@ -37,14 +42,17 @@ export const useThemeStore = create<ThemeState>()(
         const resolved = resolve(mode)
         apply(resolved)
         set({ mode, resolved })
+        broadcast(mode, resolved, get().accent)
       },
       setAccent: (accent) => {
         set({ accent })
+        broadcast(get().mode, get().resolved, accent)
       },
       init: () => {
         const resolved = resolve(get().mode)
         apply(resolved)
         set({ resolved })
+        // Don't broadcast on init — the tray reads its own persisted store on start.
       },
     }),
     {

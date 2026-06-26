@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { useProviders, useAuthStatus, useProxyStatus, connectProvider, disconnectProvider } from "@/hooks/useMetrics";
 import { XCircle, Folder, Cloud, Lock, Eye, EyeOff, Download, Radio } from "lucide-react";
 import { ProviderLogo } from "./ProviderLogo";
+import { LiquidButton } from "@/components/ui/LiquidButton";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -49,7 +50,7 @@ export function SettingsPage() {
 	}
 
 	return (
-		<div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+		<div className="h-full overflow-y-auto no-scrollbar apple-scroll-fade p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
 			<div className="mb-6 lg:mb-8">
 				<h1 className="text-xl sm:text-2xl font-semibold text-[var(--app-ink)]">Settings</h1>
 				<p className="text-sm text-[var(--app-muted)] mt-1">Configure providers and cloud sync</p>
@@ -57,7 +58,7 @@ export function SettingsPage() {
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 				{/* Local Providers */}
-				<Card className="border-2 border-[var(--app-hairline)] bg-[var(--app-soft)] p-4 rounded-[14px] card-depth">
+				<Card className="liquid-card p-4 rounded-[14px]">
 					<CardHeader>
 						<CardTitle className="text-lg font-semibold text-[var(--app-ink)]">Local Providers</CardTitle>
 						<CardDescription className="text-[var(--app-muted)]">AI CLI tools detected on your system</CardDescription>
@@ -69,7 +70,7 @@ export function SettingsPage() {
 							providers?.map((provider) => (
 								<div
 									key={provider.id}
-									className="flex items-center justify-between p-3 rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)] hover:bg-[var(--app-soft)] transition-colors animate-fade-in"
+									className="flex items-center justify-between p-3 rounded-[10px] liquid-row hover:bg-[var(--app-soft)] transition-colors animate-fade-in"
 								>
 									<div className="flex items-center gap-3">
 										{provider.installed ? (
@@ -81,9 +82,9 @@ export function SettingsPage() {
 											<div className="flex items-center gap-2">
 												<span className="text-sm font-medium text-[var(--app-ink)]">{provider.name}</span>
 												{provider.installed ? (
-													<Badge className="bg-[var(--app-ink)] text-[var(--app-canvas)] hover:bg-[var(--app-ink)] text-[10px]">Detected</Badge>
+													<Badge variant="glass-success" className="text-[10px]">Detected</Badge>
 												) : (
-													<Badge variant="secondary" className="bg-[var(--app-soft)] text-[var(--app-muted)] text-[10px]">Not Found</Badge>
+													<Badge variant="glass-muted" className="text-[10px]">Not Found</Badge>
 												)}
 											</div>
 											<div className="flex items-center gap-1 text-[11px] text-[var(--app-muted)] mt-0.5">
@@ -99,13 +100,13 @@ export function SettingsPage() {
 				</Card>
 
 				{/* Cloud Sync */}
-				<Card className="border-2 border-[var(--app-hairline)] bg-[var(--app-soft)] p-4 rounded-[14px] card-depth">
+				<Card className="liquid-card p-4 rounded-[14px]">
 					<CardHeader>
 						<CardTitle className="text-lg font-semibold text-[var(--app-ink)]">Cloud Sync</CardTitle>
 						<CardDescription className="text-[var(--app-muted)]">Connect accounts for real-time usage data</CardDescription>
 					</CardHeader>
 					<CardContent className="flex flex-col gap-3 mt-4">
-						<div className="p-4 bg-[var(--app-canvas)] border border-[var(--app-hairline)] rounded-[10px]">
+						<div className="p-4 liquid-row rounded-[10px]">
 							<div className="flex items-center gap-2 mb-2">
 								<Lock className="size-4 text-[var(--app-ink)]" />
 								<span className="text-sm font-medium text-[var(--app-ink)]">Secure Storage</span>
@@ -131,7 +132,7 @@ export function SettingsPage() {
 				</Card>
 
 				{/* Ollama Proxy */}
-				<Card className="border-2 border-[var(--app-hairline)] bg-[var(--app-soft)] p-4 rounded-[14px] card-depth">
+				<Card className="liquid-card p-4 rounded-[14px]">
 					<CardHeader>
 						<CardTitle className="text-lg font-semibold text-[var(--app-ink)] flex items-center gap-2">
 							<Radio className="size-4" />
@@ -142,7 +143,7 @@ export function SettingsPage() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="mt-4 space-y-3">
-						<div className="flex items-center justify-between p-3 rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)]">
+						<div className="flex items-center justify-between p-3 rounded-[10px] liquid-row">
 							<div>
 								<p className="text-sm font-medium text-[var(--app-ink)]">Proxy Status</p>
 								<p className="text-[11px] text-[var(--app-muted)] mt-0.5">
@@ -150,12 +151,12 @@ export function SettingsPage() {
 								</p>
 							</div>
 							{proxyStatus?.running ? (
-								<Badge className="bg-[var(--app-ink)] text-[var(--app-canvas)] hover:bg-[var(--app-ink)] text-[10px]">Running</Badge>
+								<Badge variant="glass-success" className="text-[10px]">Running</Badge>
 							) : (
-								<Badge variant="secondary" className="bg-[var(--app-soft)] text-[var(--app-muted)] text-[10px]">Stopped</Badge>
+								<Badge variant="glass-muted" className="text-[10px]">Stopped</Badge>
 							)}
 						</div>
-						<div className="p-3 rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)]">
+						<div className="p-3 rounded-[10px] liquid-row">
 							<p className="text-xs text-[var(--app-muted)]">
 								Point other apps to{" "}
 								<code className="font-mono bg-[var(--app-soft)] px-1 py-0.5 rounded text-[var(--app-ink)]">
@@ -172,7 +173,7 @@ export function SettingsPage() {
 				</Card>
 
 				{/* Export Data */}
-				<Card className="border-2 border-[var(--app-hairline)] bg-[var(--app-soft)] p-4 rounded-[14px] card-depth">
+				<Card className="liquid-card p-4 rounded-[14px]">
 					<CardHeader>
 						<CardTitle className="text-lg font-semibold text-[var(--app-ink)] flex items-center gap-2">
 							<Download className="size-4" />
@@ -184,18 +185,12 @@ export function SettingsPage() {
 					</CardHeader>
 					<CardContent className="mt-4 flex flex-col gap-3">
 						<div className="flex gap-3">
-							<button
-								onClick={() => handleExport('json')}
-								className="flex-1 px-4 py-2.5 text-sm rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)] text-[var(--app-ink)] hover:bg-[var(--app-soft)] transition-colors font-medium"
-							>
+							<LiquidButton onClick={() => handleExport('json')} className="flex-1" innerClassName="w-full px-4 py-2.5">
 								Export JSON
-							</button>
-							<button
-								onClick={() => handleExport('csv')}
-								className="flex-1 px-4 py-2.5 text-sm rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)] text-[var(--app-ink)] hover:bg-[var(--app-soft)] transition-colors font-medium"
-							>
+							</LiquidButton>
+							<LiquidButton onClick={() => handleExport('csv')} className="flex-1" innerClassName="w-full px-4 py-2.5">
 								Export CSV
-							</button>
+							</LiquidButton>
 						</div>
 						<p className="text-[11px] text-[var(--app-muted)]">
 							Exports all-time data. Use the API directly for filtered ranges:<br />
@@ -250,7 +245,7 @@ function CloudProviderCard({
 	};
 
 	return (
-		<div className="p-4 rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)]">
+		<div className="p-4 rounded-[10px] liquid-row">
 			<div className="flex items-start justify-between mb-3">
 				<div className="flex items-center gap-3">
 					<Cloud className="size-4 text-[var(--app-ink)]" />
@@ -260,20 +255,21 @@ function CloudProviderCard({
 					</div>
 				</div>
 				{connected ? (
-					<Badge className="bg-[var(--app-ink)] text-[var(--app-canvas)] hover:bg-[var(--app-ink)] text-[10px]">Connected</Badge>
+					<Badge variant="glass-success" className="text-[10px]">Connected</Badge>
 				) : (
-					<Badge variant="secondary" className="bg-[var(--app-soft)] text-[var(--app-muted)] text-[10px]">Disconnected</Badge>
+					<Badge variant="glass-muted" className="text-[10px]">Disconnected</Badge>
 				)}
 			</div>
 
 			{connected ? (
-				<button
+				<LiquidButton
 					onClick={handleDisconnect}
 					disabled={isSubmitting}
-					className="px-3 py-1.5 text-xs rounded-full font-medium bg-[var(--app-soft)] text-[var(--app-ink)] hover:bg-[var(--app-hairline)] transition-colors disabled:opacity-50"
+					className="text-xs disabled:opacity-50"
+					innerClassName="px-3 py-1.5"
 				>
 					{isSubmitting ? "Disconnecting..." : "Disconnect"}
-				</button>
+				</LiquidButton>
 			) : (
 				<div className="flex gap-2">
 					<div className="relative flex-1">
@@ -282,7 +278,7 @@ function CloudProviderCard({
 							value={key}
 							onChange={(e) => setKey(e.target.value)}
 							placeholder={`Enter ${provider.name} API key`}
-							className="w-full px-3 py-1.5 pr-8 text-xs rounded-[10px] border border-[var(--app-hairline)] bg-[var(--app-canvas)] text-[var(--app-ink)] placeholder:text-[var(--app-muted)]/60 focus:outline-none focus:border-[var(--app-ink)]"
+							className="w-full px-3 py-1.5 pr-8 text-xs rounded-[10px] liquid-row text-[var(--app-ink)] placeholder:text-[var(--app-muted)]/60 focus:outline-none focus:border-[var(--app-ink)]"
 						/>
 						<button
 							type="button"
@@ -292,13 +288,14 @@ function CloudProviderCard({
 							{showKey ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
 						</button>
 					</div>
-					<button
+					<LiquidButton
 						onClick={handleConnect}
 						disabled={isSubmitting || !key.trim()}
-						className="px-4 py-1.5 text-xs rounded-full font-medium bg-[var(--app-ink)] text-[var(--app-canvas)] hover:bg-[var(--app-ink)]/90 transition-colors disabled:opacity-50"
+						className="text-xs disabled:opacity-50"
+						innerClassName="px-4 py-1.5"
 					>
 						{isSubmitting ? "Connecting..." : "Connect"}
-					</button>
+					</LiquidButton>
 				</div>
 			)}
 		</div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { LiquidButton } from "@/components/ui/LiquidButton"
 
 export function UpdateBanner() {
   const [updateReady, setUpdateReady] = useState(false)
@@ -20,12 +21,13 @@ export function UpdateBanner() {
         A new version of Trace is ready.
       </span>
       <div className="flex items-center gap-2 shrink-0">
-        <button
+        <LiquidButton
           onClick={() => window.electronAPI?.restartAndInstall()}
-          className="rounded-md bg-[var(--app-ink)] px-3 py-1 text-xs font-medium text-[var(--app-canvas)] hover:opacity-80 transition-opacity"
+          className="text-xs"
+          innerClassName="px-3 py-1"
         >
           Restart &amp; Update
-        </button>
+        </LiquidButton>
         <button
           onClick={() => setDismissed(true)}
           className="rounded-md px-2 py-1 text-xs text-[var(--app-muted)] hover:text-[var(--app-ink)] transition-colors"

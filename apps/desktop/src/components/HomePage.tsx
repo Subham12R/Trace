@@ -1,16 +1,18 @@
 import { useMemo } from "react";
+import { useCountUp } from "@/hooks/useCountUp";
 import { useMetrics, useProviders, useActiveSessions, useModels, useTrends, useQuota } from "@/hooks/useMetrics";
-import { MessageSquare, Cpu, TrendingUp, Zap, User } from "lucide-react";
+import { MessageSquare, Cpu, TrendingUp, Zap } from "lucide-react";
 import { QuotaSection } from "./QuotaSection";
 import { StreakChart } from "./StreakChart";
 import { getStoredProfile } from "./OnboardingPage";
 import { MiniSparkline } from "./MiniSparkline";
 import { ProviderLogo } from "./ProviderLogo";
 import { ModelBadge } from "./ModelBadge";
-import { MotionCard } from "./MotionCard";
+import { LiquidCard } from "@/components/ui/LiquidCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { extractModelName } from "@/lib/modelName";
 import { useServerStore } from "@/stores/serverStore";
+import { RefreshButton } from "./RefreshButton";
 
 function greetingFor(hour: number): string {
 	if (hour < 12) return "Good morning";
@@ -39,12 +41,6 @@ export function HomePage() {
 	const topModels = (models || []).slice(0, 5);
 
 	const firstName = profile.name ? profile.name.split(" ")[0] : "there";
-	const dateLabel = now.toLocaleDateString(undefined, {
-		weekday: "long",
-		day: "numeric",
-		month: "long",
-		year: "numeric",
-	});
 	const maxModelCost = Math.max(...topModels.map((m) => m.cost), 0.0001);
 
 	const { totalTokenSparkline, costSparkline } = useMemo(() => {
@@ -73,231 +69,231 @@ export function HomePage() {
 	}, [trends]);
 
 	return (
-		<div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
-			{/* Greeting section (text-only) */}
-			<div className="flex items-start justify-between gap-4 mb-6 lg:mb-8">
+		<div className="h-full flex flex-col min-h-0 w-full p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+			{/* Greeting section (mockup-style row) - fixed header */}
+			<div className="flex items-center justify-between gap-4 pb-4  shrink-0">
+				<div className="flex items-center gap-3.5">
+					<div className="size-10 rounded-full border border-neutral-200 dark:border-neutral-800  flex items-center justify-center shrink-0 overflow-hidden bg-neutral-100 dark:bg-neutral-900">
+						{profile.avatar ? (
+							<img src={profile.avatar} alt={profile.name} className="size-full object-cover" />
+						) : (
+							<svg className="size-6 text-sky-500 dark:text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+								<circle cx="12" cy="12" r="10" />
+								<path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+							</svg>
+						)}
+					</div>
+					<h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight text-[var(--app-ink)]">
+						{greetingFor(now.getHours())}, {firstName}
+					</h1>
+				</div>
+
+				<div className="flex items-center gap-2">
+					<RefreshButton />
+				</div>
+			</div>
+
+			{/* Scrollable Cards Area */}
+			<div className="flex-1 overflow-y-auto no-scrollbar apple-scroll-fade py-4 sm:py-6 flex flex-col gap-4 sm:gap-6 pb-12 sm:pb-16 lg:pb-20">
+				{/* Activity overview */}
 				<div>
-					<p className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.14em] text-[var(--app-muted)]">
-						{dateLabel}
-					</p>
-					<div className="mt-5 sm:mt-6">
-						<p className="text-sm sm:text-base text-[var(--app-muted)]">{greetingFor(now.getHours())},</p>
-						<h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight mt-1 text-[var(--app-ink)] [overflow-wrap:anywhere]">
-							{firstName}.
-						</h1>
-						<p className="mt-3 text-sm text-[var(--app-muted)] max-w-md">
-							Here's a clear trace of your AI usage across{" "}
-							{detectedProviders.length} connected {detectedProviders.length === 1 ? "tool" : "tools"}.
-						</p>
+					<div className="mb-2">
+						<p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--app-muted)]">Activity Overview</p>
+					</div>
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+						<AnalyticsBlock
+							index={0}
+							numericValue={showSkeleton ? null : (metrics?.total_requests ?? 0)}
+							format={(n) => Math.round(n).toLocaleString()}
+							label="Total Requests"
+							icon={<MessageSquare className="size-4 text-[var(--app-ink)]" />}
+							subtitle={activeSessions && activeSessions.length > 0 ? `${activeSessions.length} active` : "No active sessions"}
+							sparkline={totalTokenSparkline}
+						/>
+						<AnalyticsBlock
+							index={1}
+							numericValue={showSkeleton ? null : (metrics ? (metrics.input_tokens + metrics.output_tokens) / 1000 : 0)}
+							format={(n) => `${n.toFixed(1)}k`}
+							label="Total Tokens"
+							icon={<Cpu className="size-4 text-[var(--app-ink)]" />}
+							subtitle="Input + output combined"
+							sparkline={totalTokenSparkline}
+						/>
+						<AnalyticsBlock
+							index={2}
+							numericValue={showSkeleton ? null : (metrics?.total_cost ?? 0)}
+							format={(n) => `$${n.toFixed(2)}`}
+							label="Estimated Cost"
+							icon={<TrendingUp className="size-4 text-[var(--app-ink)]" />}
+							subtitle="Based on model pricing"
+							sparkline={costSparkline}
+						/>
+						<AnalyticsBlock
+							index={3}
+							numericValue={showProviderSkeleton ? null : detectedProviders.length}
+							format={(n) => Math.round(n).toString()}
+							label="Active Providers"
+							icon={<Zap className="size-4 text-[var(--app-ink)]" />}
+							subtitle={topModel ? `Top: ${extractModelName(topModel.model)}` : "No model data"}
+							sparkline={[]}
+						/>
 					</div>
 				</div>
 
-				<div className="size-10 rounded-lg overflow-hidden border border-hairline bg-soft flex items-center justify-center shrink-0">
-					{profile.avatar ? (
-						<img src={profile.avatar} alt={profile.name} className="size-full object-cover" />
-					) : (
-						<User className="size-5 text-[var(--app-muted)]" />
-					)}
+				{/* Top Models + Provider Usage */}
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+					{/* Top Models */}
+					<LiquidCard index={4} className="p-4 sm:p-6">
+						<div className="flex items-center justify-between mb-4 sm:mb-5">
+							<h2 className="text-base sm:text-lg font-semibold text-[var(--app-ink)]">Top Models</h2>
+							<span className="text-[10px] sm:text-xs font-medium text-[var(--app-muted)] uppercase tracking-wide">By cost</span>
+						</div>
+						<div className="flex flex-col gap-2">
+							{showModelSkeleton ? (
+								Array.from({ length: 3 }).map((_, i) => (
+									<div key={i} className="flex items-center gap-3 p-2.5 rounded-lg liquid-row">
+										<Skeleton className="size-8 rounded-md" />
+										<div className="flex-1 space-y-1.5">
+											<Skeleton className="h-4 w-28" />
+											<Skeleton className="h-2 w-full rounded-full" />
+										</div>
+									</div>
+								))
+							) : (models || []).length === 0 ? (
+								<p className="text-sm text-[var(--app-muted)]">No model usage recorded today.</p>
+							) : (
+								topModels.map((model) => (
+									<div
+										key={model.model}
+										className="flex items-center gap-3 rounded-lg liquid-row p-2.5"
+									>
+										<div className="size-8 rounded-md bg-[var(--app-soft)] flex items-center justify-center shrink-0 border border-[var(--app-hairline)]">
+											<ModelBadge model={model.model} size="sm" />
+										</div>
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center justify-between mb-1">
+												<span className="text-sm font-medium text-[var(--app-ink)] truncate">{extractModelName(model.model)}</span>
+												<span className="text-xs font-semibold text-[var(--app-ink)] shrink-0">${model.cost.toFixed(2)}</span>
+											</div>
+											<div className="flex items-center justify-between text-[10px] text-[var(--app-muted)] mb-1">
+												<span>{model.request_count} requests</span>
+												<span>{((model.cost / maxModelCost) * 100).toFixed(0)}% max cost</span>
+											</div>
+											<div className="h-1.5 bg-[var(--app-hairline)] rounded-full overflow-hidden">
+												<div
+													className="h-full bg-[var(--app-ink)] rounded-full transition-all"
+													style={{ width: `${(model.cost / maxModelCost) * 100}%` }}
+												/>
+											</div>
+										</div>
+									</div>
+								))
+							)}
+						</div>
+					</LiquidCard>
+
+					{/* Provider Usage */}
+					<LiquidCard index={5} className="p-4 sm:p-6">
+						<div className="flex items-center justify-between mb-4 sm:mb-5">
+							<h2 className="text-base sm:text-lg font-semibold text-[var(--app-ink)]">Provider Usage</h2>
+							<span className="text-[10px] sm:text-xs font-medium text-[var(--app-muted)] uppercase tracking-wide">
+								{showProviderSkeleton ? "0 detected" : `${detectedProviders.length} detected`}
+							</span>
+						</div>
+						<div className="flex flex-col gap-2">
+							{showProviderSkeleton ? (
+								Array.from({ length: 3 }).map((_, i) => (
+									<div key={i} className="flex items-center gap-3 p-2.5 rounded-lg liquid-row">
+										<Skeleton className="size-8 rounded-md" />
+										<div className="flex-1 space-y-1.5">
+											<Skeleton className="h-4 w-24" />
+											<Skeleton className="h-1.5 w-full rounded-full" />
+										</div>
+									</div>
+								))
+							) : detectedProviders.length === 0 ? (
+								<p className="text-sm text-[var(--app-muted)]">No providers detected yet.</p>
+							) : (
+								detectedProviders.map((provider, i) => (
+									<div
+										key={provider.id}
+										className="flex items-center gap-3 rounded-lg liquid-row p-2.5"
+									>
+										<ProviderLogo provider={provider} size="md" />
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center justify-between mb-1">
+												<span className="text-sm font-medium text-[var(--app-ink)] capitalize truncate">{provider.name}</span>
+												<span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-[var(--app-ink)] text-[var(--app-canvas)] shrink-0">Connected</span>
+											</div>
+											<div className="h-1.5 bg-[var(--app-hairline)] rounded-full overflow-hidden">
+												<div
+													className="h-full bg-[var(--app-ink)] rounded-full transition-all"
+													style={{ width: `${100 - i * 15}%` }}
+												/>
+											</div>
+										</div>
+									</div>
+								))
+							)}
+						</div>
+					</LiquidCard>
 				</div>
-			</div>
 
-			{/* Activity overview */}
-			<div className="mb-2">
-				<p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--app-muted)]">Activity Overview</p>
-			</div>
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 lg:mb-8">
-				<AnalyticsBlock
-					index={0}
-					value={showSkeleton ? null : (metrics?.total_requests?.toLocaleString() ?? "0")}
-					label="Total Requests"
-					icon={<MessageSquare className="size-4 text-[var(--app-ink)]" />}
-					subtitle={activeSessions && activeSessions.length > 0 ? `${activeSessions.length} active` : "No active sessions"}
-					sparkline={totalTokenSparkline}
-				/>
-				<AnalyticsBlock
-					index={1}
-					value={showSkeleton ? null : (metrics ? `${((metrics.input_tokens + metrics.output_tokens) / 1000).toFixed(1)}k` : "0")}
-					label="Total Tokens"
-					icon={<Cpu className="size-4 text-[var(--app-ink)]" />}
-					subtitle="Input + output combined"
-					sparkline={totalTokenSparkline}
-				/>
-				<AnalyticsBlock
-					index={2}
-					value={showSkeleton ? null : `$${metrics?.total_cost?.toFixed(2) ?? "0.00"}`}
-					label="Estimated Cost"
-					icon={<TrendingUp className="size-4 text-[var(--app-ink)]" />}
-					subtitle="Based on model pricing"
-					sparkline={costSparkline}
-				/>
-				<AnalyticsBlock
-					index={3}
-					value={showProviderSkeleton ? null : detectedProviders.length.toString()}
-					label="Active Providers"
-					icon={<Zap className="size-4 text-[var(--app-ink)]" />}
-					subtitle={topModel ? `Top: ${extractModelName(topModel.model)}` : "No model data"}
-					sparkline={[]}
-				/>
-			</div>
-
-			{/* Top Models + Provider Usage */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 lg:mb-8">
-				{/* Top Models */}
-				<MotionCard
-					index={4}
-					className="bg-[var(--app-soft)] rounded-2xl border-2 border-[var(--app-hairline)] p-4 sm:p-6 card-elevate card-depth"
-				>
-					<div className="flex items-center justify-between mb-4 sm:mb-5">
-						<h2 className="text-base sm:text-lg font-semibold text-[var(--app-ink)]">Top Models</h2>
-						<span className="text-[10px] sm:text-xs font-medium text-[var(--app-muted)] uppercase tracking-wide">By cost</span>
+				{/* Insights grid */}
+				<div>
+					<div className="mb-2">
+						<p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--app-muted)]">Insights</p>
 					</div>
-					<div className="space-y-2.5">
-						{showModelSkeleton ? (
-							Array.from({ length: 4 }).map((_, i) => (
-								<div key={i} className="flex items-center gap-3 rounded-lg border border-[var(--app-hairline)] bg-[var(--app-canvas)] p-2.5">
-									<Skeleton className="size-8 rounded-lg shrink-0" />
-									<div className="flex-1 space-y-1.5">
-										<Skeleton className="h-3.5 w-32" />
-										<Skeleton className="h-1.5 w-full rounded-full" />
-									</div>
-									<Skeleton className="h-5 w-12 shrink-0" />
-								</div>
-							))
-						) : topModels.length === 0 ? (
-							<p className="text-sm text-[var(--app-muted)]">No model usage yet.</p>
-						) : (
-							topModels.map((m) => (
-								<div
-									key={`${m.source}-${m.model}`}
-									className="flex items-center gap-3 rounded-lg border border-[var(--app-hairline)] bg-[var(--app-canvas)] p-2.5"
-								>
-									<ModelBadge model={m.model} source={m.source} size="md" />
-									<div className="flex-1 min-w-0">
-										<p className="text-sm font-medium text-[var(--app-ink)] truncate">{extractModelName(m.model)}</p>
-										<div className="mt-1.5 h-1.5 bg-[var(--app-hairline)] rounded-full overflow-hidden">
-											<div
-												className="h-full bg-[var(--app-ink)] rounded-full transition-all"
-												style={{ width: `${(m.cost / maxModelCost) * 100}%` }}
-											/>
-										</div>
-									</div>
-									<div className="text-right shrink-0">
-										<p className="text-sm font-semibold text-[var(--app-ink)]">${m.cost.toFixed(2)}</p>
-										<p className="text-[10px] text-[var(--app-muted)]">{m.request_count.toLocaleString()} req</p>
-									</div>
-								</div>
-							))
+					<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+						{hasQuotas && (
+							<div className="lg:col-span-2">
+								<QuotaSection />
+							</div>
 						)}
-					</div>
-				</MotionCard>
 
-				{/* Provider Usage */}
-				<MotionCard
-					index={5}
-					className="bg-[var(--app-soft)] rounded-2xl border-2 border-[var(--app-hairline)] p-4 sm:p-6 card-elevate card-depth"
-				>
-					<div className="flex items-center justify-between mb-4 sm:mb-5">
-						<h2 className="text-base sm:text-lg font-semibold text-[var(--app-ink)]">Provider Usage</h2>
-						<span className="text-[10px] sm:text-xs font-medium text-[var(--app-muted)] uppercase tracking-wide">
-							{detectedProviders.length} detected
-						</span>
+						<LiquidCard index={7} className={`p-4 sm:p-6 ${hasQuotas ? "lg:col-span-1" : "lg:col-span-3"}`}>
+							<StreakChart />
+						</LiquidCard>
 					</div>
-					<div className="space-y-3">
-						{showProviderSkeleton ? (
-							Array.from({ length: 3 }).map((_, i) => (
-								<div key={i} className="flex items-center gap-3 rounded-lg border border-[var(--app-hairline)] bg-[var(--app-canvas)] p-2.5">
-									<Skeleton className="size-8 rounded-lg shrink-0" />
-									<div className="flex-1 space-y-1.5">
-										<div className="flex items-center justify-between">
-											<Skeleton className="h-3.5 w-24" />
-											<Skeleton className="h-4 w-16 rounded-md" />
-										</div>
-										<Skeleton className="h-1.5 w-full rounded-full" />
-									</div>
-								</div>
-							))
-						) : detectedProviders.length === 0 ? (
-							<p className="text-sm text-[var(--app-muted)]">No providers detected yet.</p>
-						) : (
-							detectedProviders.map((provider, i) => (
-								<div
-									key={provider.id}
-									className="flex items-center gap-3 rounded-lg border border-[var(--app-hairline)] bg-[var(--app-canvas)] p-2.5"
-								>
-									<ProviderLogo provider={provider} size="md" />
-									<div className="flex-1 min-w-0">
-										<div className="flex items-center justify-between mb-1">
-											<span className="text-sm font-medium text-[var(--app-ink)] capitalize truncate">{provider.name}</span>
-											<span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-[var(--app-ink)] text-[var(--app-canvas)] shrink-0">Connected</span>
-										</div>
-										<div className="h-1.5 bg-[var(--app-hairline)] rounded-full overflow-hidden">
-											<div
-												className="h-full bg-[var(--app-ink)] rounded-full transition-all"
-												style={{ width: `${100 - i * 15}%` }}
-											/>
-										</div>
-									</div>
-								</div>
-							))
-						)}
-					</div>
-				</MotionCard>
-			</div>
-
-			{/* Insights grid */}
-			<div className="mb-2">
-				<p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--app-muted)]">Insights</p>
-			</div>
-			<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 lg:mb-8">
-				{hasQuotas && (
-					<div className="lg:col-span-2">
-						<QuotaSection />
-					</div>
-				)}
-
-				<MotionCard
-					index={7}
-					className={`bg-[var(--app-soft)] rounded-2xl border-2 border-[var(--app-hairline)] p-4 sm:p-6 card-elevate card-depth ${
-						hasQuotas ? "lg:col-span-1" : "lg:col-span-3"
-					}`}
-				>
-					<StreakChart />
-				</MotionCard>
+				</div>
 			</div>
 		</div>
 	);
 }
 
 function AnalyticsBlock({
-	value,
+	numericValue,
+	format,
 	label,
 	icon,
 	subtitle,
 	index,
 	sparkline,
 }: {
-	value: string | null;
+	numericValue: number | null;
+	format: (n: number) => string;
 	label: string;
 	icon: React.ReactNode;
 	subtitle: string;
 	index: number;
 	sparkline: number[];
 }) {
+	const animated = useCountUp(numericValue, 1.1, index * 0.06);
+
 	return (
-		<MotionCard
-			index={index}
-			className="bg-[var(--app-soft)] rounded-2xl border-2 border-[var(--app-hairline)] p-4 sm:p-5 card-elevate card-depth flex flex-col"
-		>
+		<LiquidCard index={index} className="p-4 sm:p-5 flex flex-col">
 			<div className="flex items-center justify-between mb-3">
 				<span className="text-[10px] sm:text-xs font-medium text-[var(--app-muted)] uppercase tracking-wide">{label}</span>
-				<span className="inline-flex items-center justify-center size-7 rounded-md bg-[var(--app-canvas)] border border-[var(--app-hairline)]">
+				<span className="inline-flex items-center justify-center size-7">
 					{icon}
 				</span>
 			</div>
-			{value === null ? (
+			{animated === null ? (
 				<Skeleton className="h-8 w-20 mt-1" />
 			) : (
-				<div className="text-2xl sm:text-3xl font-semibold text-[var(--app-ink)] tracking-tight">{value}</div>
+				<div className="text-2xl sm:text-3xl font-semibold text-[var(--app-ink)] tracking-tight tabular-nums">
+					{format(animated)}
+				</div>
 			)}
 			<p className="text-[10px] sm:text-xs text-[var(--app-muted)] mt-1 truncate">{subtitle}</p>
 			{sparkline.length > 1 && (
@@ -305,6 +301,6 @@ function AnalyticsBlock({
 					<MiniSparkline data={sparkline} />
 				</div>
 			)}
-		</MotionCard>
+		</LiquidCard>
 	);
 }

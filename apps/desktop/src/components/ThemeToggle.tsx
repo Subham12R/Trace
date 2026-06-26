@@ -20,16 +20,18 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
 					const idx = options.findIndex((o) => o.id === mode);
 					setMode(options[(idx + 1) % options.length].id);
 				}}
-				className="inline-flex items-center justify-center size-9 rounded-lg border border-[var(--app-hairline)] bg-[var(--app-soft)] text-[var(--app-ink)] hover:border-[var(--app-muted)]/40 transition-colors"
+				className="liquid-shell inline-flex items-center justify-center rounded-full p-[2px] transition-opacity hover:opacity-90 active:opacity-75"
 				aria-label="Toggle theme"
 			>
-				<Icon className="size-4" />
+				<span className="liquid-inner flex size-9 items-center justify-center rounded-full text-[var(--app-ink)]">
+					<Icon className="size-4" />
+				</span>
 			</button>
 		);
 	}
 
 	return (
-		<div className="inline-flex items-center gap-1 rounded-lg border border-[var(--app-hairline)] bg-[var(--app-soft)] p-1">
+		<div className="liquid-shell inline-flex items-center gap-1 rounded-full p-1">
 			{options.map((option) => {
 				const Icon = option.icon;
 				const active = mode === option.id;
@@ -38,9 +40,9 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
 						key={option.id}
 						onClick={() => setMode(option.id)}
 						className={cn(
-							"flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
+							"flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors",
 							active
-								? "bg-[var(--app-ink)] text-[var(--app-canvas)]"
+								? "liquid-inner text-[var(--app-ink)]"
 								: "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
 						)}
 					>

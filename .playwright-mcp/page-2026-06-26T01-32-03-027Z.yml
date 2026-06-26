@@ -1,0 +1,118 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e6]:
+      - generic [ref=e8]:
+        - img "Trace" [ref=e9]
+        - generic [ref=e10]:
+          - generic [ref=e11]: Trace
+          - generic [ref=e12]: AI Observability
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e15]: OVERVIEW
+          - list [ref=e17]:
+            - listitem [ref=e18]:
+              - link "Dashboard" [ref=e19] [cursor=pointer]:
+                - /url: "#/home"
+                - img [ref=e20]
+                - generic [ref=e25]: Dashboard
+        - generic [ref=e26]:
+          - generic [ref=e27]: ANALYSIS
+          - list [ref=e29]:
+            - listitem [ref=e30]:
+              - link "Details" [ref=e31] [cursor=pointer]:
+                - /url: "#/details"
+                - img [ref=e32]
+                - generic [ref=e34]: Details
+            - listitem [ref=e35]:
+              - link "Providers" [ref=e36] [cursor=pointer]:
+                - /url: "#/providers"
+                - img [ref=e37]
+                - generic [ref=e41]: Providers
+        - generic [ref=e42]:
+          - generic [ref=e43]: PERSONAL
+          - list [ref=e45]:
+            - listitem [ref=e46]:
+              - link "Customize" [ref=e47] [cursor=pointer]:
+                - /url: "#/customize"
+                - img [ref=e48]
+                - generic [ref=e50]: Customize
+            - listitem [ref=e51]:
+              - link "Profile" [ref=e52] [cursor=pointer]:
+                - /url: "#/profile"
+                - img [ref=e53]
+                - generic [ref=e56]: Profile
+        - generic [ref=e57]:
+          - generic [ref=e58]: SETTINGS
+          - list [ref=e60]:
+            - listitem [ref=e61]:
+              - link "Settings" [ref=e62] [cursor=pointer]:
+                - /url: "#/settings"
+                - img [ref=e63]
+                - generic [ref=e66]: Settings
+            - listitem [ref=e67]:
+              - link "Account" [ref=e68] [cursor=pointer]:
+                - /url: "#/account"
+                - img [ref=e69]
+                - generic [ref=e71]: Account
+      - link "R Rikk4 local@trace.app" [ref=e73] [cursor=pointer]:
+        - /url: "#/profile"
+        - generic [ref=e75]: R
+        - generic [ref=e76]:
+          - paragraph [ref=e77]: Rikk4
+          - paragraph [ref=e78]: local@trace.app
+    - main [ref=e79]:
+      - generic [ref=e80]:
+        - generic [ref=e81]:
+          - button "Toggle Sidebar" [ref=e82] [cursor=pointer]:
+            - img
+            - generic [ref=e83]: Toggle Sidebar
+          - generic [ref=e84]:
+            - img "Trace" [ref=e85]
+            - generic [ref=e86]: Trace
+        - generic [ref=e87]:
+          - button [ref=e88] [cursor=pointer]:
+            - img [ref=e89]
+          - button "Toggle theme" [ref=e94] [cursor=pointer]:
+            - img [ref=e95]
+      - generic [ref=e97]: Connecting to Trace server…
+      - generic [ref=e100]:
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - paragraph [ref=e103]: Friday, June 26, 2026
+            - generic [ref=e104]:
+              - paragraph [ref=e105]: Good morning,
+              - heading "Rikk4." [level=1] [ref=e106]
+              - paragraph [ref=e107]: Here's a clear trace of your AI usage across 0 connected tools.
+          - img [ref=e109]
+        - paragraph [ref=e113]: Activity Overview
+        - generic [ref=e114]:
+          - generic [ref=e115]:
+            - generic [ref=e116]:
+              - generic [ref=e117]: Total Requests
+              - img [ref=e119]
+            - paragraph [ref=e122]: No active sessions
+          - generic [ref=e123]:
+            - generic [ref=e124]:
+              - generic [ref=e125]: Total Tokens
+              - img [ref=e127]
+            - paragraph [ref=e131]: Input + output combined
+          - generic [ref=e132]:
+            - generic [ref=e133]:
+              - generic [ref=e134]: Estimated Cost
+              - img [ref=e136]
+            - paragraph [ref=e140]: Based on model pricing
+          - generic [ref=e141]:
+            - generic [ref=e142]:
+              - generic [ref=e143]: Active Providers
+              - img [ref=e145]
+            - paragraph [ref=e148]: No model data
+        - generic [ref=e149]:
+          - generic [ref=e151]:
+            - heading "Top Models" [level=2] [ref=e152]
+            - generic [ref=e153]: By cost
+          - generic [ref=e180]:
+            - heading "Provider Usage" [level=2] [ref=e181]
+            - generic [ref=e182]: 0 detected
+        - paragraph [ref=e206]: Insights
+        - paragraph [ref=e210]: Loading streak data...
+  - region "Notifications alt+T"

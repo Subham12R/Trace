@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Clock, RefreshCw, AlertTriangle } from "lucide-react";
 import { useQuota, type QuotaLimit } from "@/hooks/useMetrics";
+import { LiquidCard } from "@/components/ui/LiquidCard";
 
 function formatTimeUntil(isoDate: string): string {
 	try {
@@ -32,7 +33,7 @@ function formatTimeUntil(isoDate: string): string {
 function QuotaCard({ limit }: { limit: QuotaLimit }) {
 	const utilization = Math.min(Math.max(limit.utilization, 0), 100);
 	return (
-		<div className="flex-1 min-w-[200px] sm:min-w-[240px] bg-[var(--app-canvas)] rounded-[10px] border border-[var(--app-hairline)] p-4 sm:p-5">
+		<div className="flex-1 min-w-[200px] sm:min-w-[240px] liquid-row rounded-[10px] p-4 sm:p-5">
 			<div className="flex items-center justify-between mb-3">
 				<h3 className="text-xs sm:text-sm font-medium text-[var(--app-ink)]">{limit.label}</h3>
 				<span className="text-xs sm:text-sm font-semibold text-[var(--app-ink)]">{utilization}% used</span>
@@ -96,14 +97,14 @@ export function QuotaSection() {
 	const isStale = sorted.some((q) => q.stale);
 
 	return (
-		<div className="bg-[var(--app-soft)] rounded-2xl border-2 border-[var(--app-hairline)] p-4 sm:p-6 space-y-4 sm:space-y-6 card-depth">
+		<LiquidCard index={6} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 				<div className="flex items-center gap-2.5">
 					<h2 className="text-base sm:text-lg font-semibold text-[var(--app-ink)]">Provider Limits</h2>
 					{isStale && (
 						<span className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
 							<AlertTriangle className="size-3" />
-							Rate limited · last known
+						
 						</span>
 					)}
 				</div>
@@ -131,6 +132,6 @@ export function QuotaSection() {
 					);
 				})}
 			</div>
-		</div>
+		</LiquidCard>
 	);
 }

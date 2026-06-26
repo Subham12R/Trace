@@ -1,11 +1,14 @@
+import { useMemo } from "react";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { useMetrics, useTrends, useModels, useSessions, useProjects, useProviders } from "@/hooks/useMetrics";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
 import { extractModelName } from "@/lib/modelName";
 import { ProviderLogo } from "./ProviderLogo";
 import { ModelBadge } from "./ModelBadge";
 import { getProviderColor } from "@/lib/colors";
+import { LiquidCard } from "@/components/ui/LiquidCard";
 import {
 	Table,
 	TableBody,
@@ -26,46 +29,60 @@ export function DetailedAnalysisPage() {
 
 	const sources = Array.from(new Set(trends?.map((t) => t.source) || []));
 
-	const chartData =
-		trends?.reduce(
+	const chartData = useMemo(() => {
+		if (!trends) return [];
+		const sourcesList = Array.from(new Set(trends.map((t) => t.source)));
+		return trends.reduce(
 			(acc, point) => {
-				const existing = acc.find((d) => d.bucket === point.bucket);
-				if (existing) {
-					existing[point.source] = showCost ? point.cost : point.input_tokens + point.output_tokens;
-				} else {
-					acc.push({
-						bucket: point.bucket,
-						[point.source]: showCost ? point.cost : point.input_tokens + point.output_tokens,
+				let existing = acc.find((d) => d.bucket === point.bucket);
+				if (!existing) {
+					existing = { bucket: point.bucket };
+					sourcesList.forEach((s) => {
+						existing![s] = 0;
 					});
+					acc.push(existing);
 				}
+				existing[point.source] = showCost ? point.cost : point.input_tokens + point.output_tokens;
 				return acc;
 			},
 			[] as Record<string, string | number>[]
-		) || [];
+		);
+	}, [trends, showCost]);
 
 	const providerById = (id: string) => providers?.find((p) => p.id === id);
 
 	return (
-		<div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+		<div className="h-full overflow-y-auto no-scrollbar apple-scroll-fade p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
 			<div className="mb-6">
 				<h1 className="text-xl sm:text-2xl font-semibold text-[var(--app-ink)]">Detailed Analysis</h1>
 				<p className="text-sm text-[var(--app-muted)] mt-1">Deep dive into your usage patterns</p>
 			</div>
 
-			<div className="flex gap-1 mb-6 lg:mb-8 bg-[var(--app-soft)] border border-[var(--app-hairline)] p-1 rounded-[12px] w-fit overflow-x-auto">
+			<div className="liquid-shell flex gap-1 mb-6 lg:mb-8 p-1 rounded-full w-fit overflow-x-auto relative">
 				{"today week month all".split(" ").map((range) => (
 					<button
 						key={range}
 						onClick={() => setTimeRange(range as any)}
-						className={cn(
-							"px-4 py-1.5 text-sm rounded-[10px] font-medium transition-colors whitespace-nowrap",
-							timeRange === range ? "bg-[var(--app-canvas)] text-[var(--app-ink)] shadow-sm" : "text-[var(--app-muted)]"
-						)}
+						className="relative px-4 py-1.5 text-sm rounded-full font-medium transition-colors whitespace-nowrap focus:outline-none"
 					>
-						{range === "today" && "Today"}
-						{range === "week" && "Week"}
-						{range === "month" && "Month"}
-						{range === "all" && "All Time"}
+						{timeRange === range && (
+							<motion.div
+								layoutId="active-range-detailed"
+								className="absolute inset-0 liquid-inner rounded-full"
+								transition={{ type: "spring", stiffness: 380, damping: 30 }}
+							/>
+						)}
+						<span
+							className={cn(
+								"relative z-10 transition-colors duration-200",
+								timeRange === range ? "text-[var(--app-ink)]" : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+							)}
+						>
+							{range === "today" && "Today"}
+							{range === "week" && "Week"}
+							{range === "month" && "Month"}
+							{range === "all" && "All Time"}
+						</span>
 					</button>
 				))}
 			</div>
@@ -81,43 +98,57 @@ export function DetailedAnalysisPage() {
 				<SummaryBlock label="Cache Hit Rate" value={`${metrics?.cache_hit_rate?.toFixed(0) || 0}%`} />
 			</div>
 
-			<div className="bg-[var(--app-soft)] rounded-[14px] border-2 border-[var(--app-hairline)] p-4 sm:p-6 mb-6 lg:mb-8 card-depth">
-				<h2 className="text-base sm:text-lg font-semibold text-[var(--app-ink)] mb-4">Usage Trends</h2>
-				<div className="h-56 sm:h-64">
-					<ResponsiveContainer width="100%" height="100%">
-						<LineChart data={chartData}>
-							<CartesianGrid stroke="#e5e2df" vertical={false} />
-							<XAxis dataKey="bucket" stroke="#6b6b6b" fontSize={12} tickLine={false} axisLine={false} />
-							<YAxis stroke="#6b6b6b" fontSize={12} tickLine={false} axisLine={false} />
-						<Tooltip
-							contentStyle={{
-								backgroundColor: "var(--app-canvas)",
-								border: "1px solid var(--app-hairline)",
-								borderRadius: "8px",
-							}}
-							itemStyle={{
-								color: "var(--app-ink)",
-								fontSize: "13px",
-							}}
-							labelStyle={{
-								color: "var(--app-muted)",
-								fontSize: "12px",
-								marginBottom: "4px",
-							}}
-						/>
-							{sources.map((source, i) => (
-								<Line
-									key={source}
-									type="monotone"
-									dataKey={source}
-									stroke={getProviderColor(source, i)}
-									strokeWidth={2}
-									dot={false}
+			<div className="mb-6 lg:mb-8">
+				<LiquidCard className="p-4 sm:p-6" height="h-fit">
+					<h2 className="text-base sm:text-lg font-semibold text-[var(--app-ink)] mb-4">Usage Trends</h2>
+					<div className="h-56 sm:h-64">
+						<ResponsiveContainer width="100%" height="100%">
+							<AreaChart data={chartData}>
+								<defs>
+									{sources.map((source, i) => {
+										const color = getProviderColor(source, i);
+										return (
+											<linearGradient key={source} id={`grad-detailed-${source}`} x1="0" y1="0" x2="0" y2="1">
+												<stop offset="5%" stopColor={color} stopOpacity={0.15} />
+												<stop offset="95%" stopColor={color} stopOpacity={0} />
+											</linearGradient>
+										);
+									})}
+								</defs>
+								<CartesianGrid stroke="var(--app-hairline)" vertical={false} />
+								<XAxis dataKey="bucket" stroke="#6b6b6b" fontSize={12} tickLine={false} axisLine={false} />
+								<YAxis stroke="#6b6b6b" fontSize={12} tickLine={false} axisLine={false} />
+								<Tooltip
+									contentStyle={{
+										backgroundColor: "var(--app-canvas)",
+										border: "1px solid var(--app-hairline)",
+										borderRadius: "8px",
+									}}
+									itemStyle={{
+										color: "var(--app-ink)",
+										fontSize: "13px",
+									}}
+									labelStyle={{
+										color: "var(--app-muted)",
+										fontSize: "12px",
+										marginBottom: "4px",
+									}}
 								/>
-							))}
-						</LineChart>
-					</ResponsiveContainer>
-				</div>
+								{sources.map((source, i) => (
+									<Area
+										key={source}
+										type="monotone"
+										dataKey={source}
+										stroke={getProviderColor(source, i)}
+										fill={`url(#grad-detailed-${source})`}
+										strokeWidth={2}
+										dot={false}
+									/>
+								))}
+							</AreaChart>
+						</ResponsiveContainer>
+					</div>
+				</LiquidCard>
 			</div>
 
 			<TableSection title="Model Breakdown" minWidth="700px">
@@ -255,10 +286,10 @@ export function DetailedAnalysisPage() {
 
 function SummaryBlock({ label, value }: { label: string; value: string }) {
 	return (
-		<div className="bg-[var(--app-soft)] rounded-[14px] border-2 border-[var(--app-hairline)] p-3 sm:p-4 card-depth">
+		<LiquidCard className="p-3 sm:p-4">
 			<p className="text-[9px] sm:text-[10px] font-medium text-[var(--app-muted)] uppercase tracking-wide truncate">{label}</p>
 			<p className="text-lg sm:text-xl font-semibold text-[var(--app-ink)] mt-1.5 truncate">{value}</p>
-		</div>
+		</LiquidCard>
 	);
 }
 
@@ -272,15 +303,17 @@ function TableSection({
 	children: React.ReactNode;
 }) {
 	return (
-		<div className="bg-[var(--app-soft)] rounded-[14px] border-2 border-[var(--app-hairline)] p-4 sm:p-6 mb-6 lg:mb-8 card-depth last:mb-0">
-			<h2 className="text-base sm:text-lg font-semibold text-[var(--app-ink)] mb-4">{title}</h2>
-			<div className="overflow-x-auto -mx-4 sm:mx-0">
-				<div className="px-4 sm:px-0" style={{ minWidth }}>
-					<div className="bg-[var(--app-canvas)] rounded-[10px] border border-[var(--app-hairline)] overflow-hidden">
-						{children}
+		<div className="mb-6 lg:mb-8 last:mb-0">
+			<LiquidCard className="p-4 sm:p-6" height="h-fit">
+				<h2 className="text-base sm:text-lg font-semibold text-[var(--app-ink)] mb-4">{title}</h2>
+				<div className="overflow-x-auto -mx-4 sm:mx-0">
+					<div className="px-4 sm:px-0" style={{ minWidth }}>
+						<div className="rounded-[10px] overflow-hidden">
+							{children}
+						</div>
 					</div>
 				</div>
-			</div>
+			</LiquidCard>
 		</div>
 	);
 }

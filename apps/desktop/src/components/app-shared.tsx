@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { LayoutDashboard, BarChart3, Layers, Sparkles, Settings, User, Cloud } from "lucide-react";
+import { LayoutDashboard, BarChart3, Layers, Sparkles } from "lucide-react";
 
 export type NavItem = {
 	title: string;
@@ -44,14 +44,6 @@ export const navSections: NavSection[] = [
 		label: "PERSONAL",
 		items: [
 			{ title: "Customize", path: "#/customize", icon: <Sparkles className="size-[18px]" /> },
-			{ title: "Profile", path: "#/profile", icon: <User className="size-[18px]" /> },
-		],
-	},
-	{
-		label: "SETTINGS",
-		items: [
-			{ title: "Settings", path: "#/settings", icon: <Settings className="size-[18px]" /> },
-			{ title: "Account", path: "#/account", icon: <Cloud className="size-[18px]" /> },
 		],
 	},
 ];
