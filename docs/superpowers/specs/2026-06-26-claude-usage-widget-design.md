@@ -33,48 +33,123 @@ Add a compact Claude usage widget to the app header that shows the 5-hour rollin
 ```
 
 - **Layout:** `flex items-center gap-1.5` — icon on left, bar immediately right
+
+#### Liquid glass button shell (LiquidButton-derived)
+
+Outer wrapper — the gradient pill border:
+```css
+background: linear-gradient(180deg,
+  rgb(245,245,245) 0%,
+  rgba(101,104,111,0.39) 24%,
+  rgba(255,255,255,0.75) 100%
+);
+box-shadow:
+  inset 0px 4px 6.1px 0px rgba(255,255,255,0.23),
+  2px 23px 14px 0px rgba(0,0,0,0.02),
+  1px 10px 10px 0px rgba(0,0,0,0.03),
+  0px 3px 6px 0px rgba(0,0,0,0.03);
+border-radius: 9999px;   /* rounded-full */
+padding: 2px;
+```
+
+Inner span — the frosted fill:
+```css
+background: rgba(255,255,255,0.6);
+backdrop-filter: blur(8px);
+border-radius: 9999px;
+padding: 4px 8px;       /* tight, to stay compact */
+```
+
+Dark mode adaptation:
+```css
+/* outer */
+background: linear-gradient(180deg,
+  rgba(255,255,255,0.12) 0%,
+  rgba(255,255,255,0.04) 24%,
+  rgba(255,255,255,0.08) 100%
+);
+/* inner */
+background: rgba(255,255,255,0.07);
+```
+
+#### Battery bar — morph fill animation
+
 - **Icon:** `<img src="/logos/claude.svg" className="size-[18px]" />`
-- **Battery bar:** 4px wide × 20px tall vertical pill
-  - Outer track: `w-1 h-5 rounded-full bg-white/10 dark:bg-white/5 overflow-hidden`
-  - Inner fill: `w-full rounded-full origin-bottom transition-transform duration-500`
-    - Animated via `scaleY(percent / 100)` with `transform-origin: bottom`
-  - Fill color thresholds:
-    - 0–69 %: `bg-emerald-400`
-    - 70–89 %: `bg-amber-400`
-    - ≥ 90 %: `bg-red-400`
-- **Button shell:** `rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors flex items-center gap-1.5 px-2`
+- Outer track: `w-1 h-5 rounded-full overflow-hidden` with `bg-black/10 dark:bg-white/10`
+- Inner fill: framer-motion `<motion.div>` animated with spring:
+  ```ts
+  animate={{ scaleY: percent / 100 }}
+  style={{ transformOrigin: "bottom" }}
+  transition={{ type: "spring", stiffness: 120, damping: 20 }}
+  ```
+- Fill color thresholds (plain Tailwind class swap, not animated):
+  - 0–69 %: `bg-emerald-400`
+  - 70–89 %: `bg-amber-400`
+  - ≥ 90 %: `bg-red-400`
 - Renders `null` when `rolling` is null (OAuth creds missing — silent hide)
 
-### Glass tooltip (macOS frosted-glass style)
+### Liquid glass tooltip (macOS-style)
 
 Appears on hover, auto-positioned by `@base-ui/react/tooltip`.
 
-**Visual treatment:**
+#### Entry transition — blur-morph
+
+The tooltip popup uses framer-motion `AnimatePresence` (or CSS `@keyframes`) for a morph-style entry:
+```ts
+initial:  { opacity: 0, scale: 0.92, filter: "blur(6px)" }
+animate:  { opacity: 1, scale: 1,    filter: "blur(0px)" }
+exit:     { opacity: 0, scale: 0.94, filter: "blur(4px)" }
+transition: { type: "spring", stiffness: 300, damping: 28 }
 ```
-backdrop-blur-xl
-bg-white/70 dark:bg-zinc-900/70
-border border-white/30 dark:border-white/10
-shadow-xl shadow-black/10 dark:shadow-black/40
-rounded-2xl px-4 py-3 w-60
+> Note: `@base-ui/react/tooltip` renders via portal — apply these classes to the `TooltipContent` wrapper div inside the popup, not to the portal itself.
+
+#### Visual treatment
+
+Outer panel — same liquid glass shell as the button:
+```css
+background: linear-gradient(160deg,
+  rgba(255,255,255,0.72) 0%,
+  rgba(255,255,255,0.48) 100%
+);
+backdrop-filter: blur(20px) saturate(180%);
+border: 1px solid rgba(255,255,255,0.5);
+box-shadow:
+  inset 0px 1px 0px rgba(255,255,255,0.6),
+  0px 8px 32px rgba(0,0,0,0.08),
+  0px 2px 8px rgba(0,0,0,0.04);
+border-radius: 16px;   /* rounded-2xl */
 ```
 
-**Layout:**
+Dark mode:
+```css
+background: linear-gradient(160deg,
+  rgba(30,30,35,0.82) 0%,
+  rgba(20,20,25,0.72) 100%
+);
+border: 1px solid rgba(255,255,255,0.10);
+box-shadow:
+  inset 0px 1px 0px rgba(255,255,255,0.06),
+  0px 8px 32px rgba(0,0,0,0.40);
+```
+
+#### Content layout (240px wide, `px-4 py-3`)
+
 ```
 ┌────────────────────────────────────────┐
-│ [◎]  5-hr Window                       │  ← icon + label (xs semibold)
+│ [◎]  5-hr Window                       │  ← icon + label (xs semibold, text-shadow)
 │                                        │
-│  ████████████░░░░  82%                 │  ← h-1.5 progress bar + pct
-│  4,100 / 5,000 tokens                  │  ← xs muted
+│  ████████████░░░░  82%                 │  ← h-1.5 rounded-full bar + pct
+│  4,100 / 5,000 tokens                  │  ← xs muted (text-foreground/55)
 │  Resets 3:45 PM                        │  ← xs muted
-│  ──────────────────────────────────    │  ← divider
+│  ──────────────────────────────────    │  ← rgba(0,0,0,0.08) divider
 │  This week   23,400 tok  ·  $1.20      │  ← xs
 └────────────────────────────────────────┘
 ```
 
 - All numbers: `tabular-nums`
-- Muted text: `text-foreground/60`
-- Progress bar fill color matches battery thresholds
-- Divider: `border-t border-white/20 dark:border-white/10 my-2`
+- Label text: `text-shadow: 0px 1px 0px rgba(255,255,255,0.46)` (matches LiquidButton)
+- Progress bar track: `bg-black/10 dark:bg-white/10`; fill uses same color thresholds as battery
+- Divider: inline style `borderColor: rgba(0,0,0,0.08)` / dark `rgba(255,255,255,0.08)`
 
 ---
 
@@ -110,7 +185,7 @@ export function useClaudeUsage() {
 
 `GET /usage`:
 
-1. **Rolling:** Call `fetch_claude_oauth_usage()`. Parse response to extract `used`, `limit`, `percent`, `reset_at`. Return `null` rolling if call fails or creds absent.
+1. **Rolling:** Call `fetch_claude_oauth_usage()`. The raw JSON shape from `https://api.anthropic.com/api/oauth/usage` is not documented internally — parse defensively by inspecting the actual response at implementation time and extracting `used`, `limit`, `percent`, `reset_at` with safe fallbacks. Return `rolling = None` if the call fails, returns unexpected shape, or creds are absent.
 2. **Weekly:** Query `requests` table:
    ```sql
    SELECT SUM(input_tokens + output_tokens), SUM(cost)
@@ -168,10 +243,13 @@ SystemWidget(className?)
 | File | Change |
 |---|---|
 | `apps/desktop/src/components/SystemWidget.tsx` | Complete rewrite |
+| `apps/desktop/src/components/ui/LiquidButton.tsx` | New shared component (from provided snippet) |
 | `apps/desktop/src/hooks/useMetrics.ts` | Add `useClaudeUsage` + `ClaudeUsage` type |
 | `apps/server/app/api/system.py` | Add `GET /usage` endpoint |
 
 **No changes to:** `app-shell.tsx`, `main.ts`, or any other file.
+
+**Dependencies already present:** `framer-motion` (used elsewhere in the app — no new package needed).
 
 ---
 
@@ -179,6 +257,8 @@ SystemWidget(className?)
 
 - Widget hides silently when OAuth creds absent (`null` rolling → `return null`)
 - Tooltip only renders when data is available (no loading states shown)
-- Glass uses only Tailwind utilities — `backdrop-blur-xl`, `bg-white/70`, etc.
-- Battery fill animates via CSS `scaleY` + `transform-origin: bottom`
+- Liquid glass uses inline `style` props for gradient/shadow (Tailwind can't express multi-stop inline gradients with dynamic opacity); structural layout still uses Tailwind
+- Battery fill uses framer-motion spring (`stiffness: 120, damping: 20`) on `scaleY` with `transformOrigin: "bottom"`
+- Tooltip entry uses blur-morph spring (`stiffness: 300, damping: 28`) — applied to content wrapper inside the `@base-ui` portal
+- `LiquidButton` is a standalone component in `ui/` for potential reuse; `SystemWidget` uses it as the trigger
 - Weekly boundary: Monday 00:00 UTC (matches Trace's existing `range=week` logic)
