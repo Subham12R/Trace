@@ -9,7 +9,7 @@ on:
       - '.github/workflows/deploy.yml'
 
 env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/trace-cloud
+  IMAGE: ghcr.io/subham12r/trace-cloud
 
 jobs:
   deploy:
