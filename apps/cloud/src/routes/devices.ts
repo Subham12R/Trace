@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { requireAuth } from "../lib/middleware.js";
 import { deviceRateLimit } from "../lib/rate-limit.js";
 import { RegisterDeviceSchema } from "../lib/validators.js";
 import { db } from "../db/index.js";
-import { devices } from "../db/schema.js";
+import { devices, syncCursors } from "../db/schema.js";
 
 const app = new Hono<{
     Variables: { userId: string; user: { id: string; email: string; name: string } };
@@ -43,10 +43,21 @@ app.post(
 
 app.get("/", requireAuth, async (c) => {
     const userId = c.get("userId");
-    const rows = await db.query.devices.findMany({
-        where: eq(devices.userId, userId),
-        orderBy: (d, { desc }) => [desc(d.lastSeenAt)],
-    });
+    const rows = await db
+        .select({
+            id: devices.id,
+            userId: devices.userId,
+            name: devices.name,
+            platform: devices.platform,
+            version: devices.version,
+            createdAt: devices.createdAt,
+            lastSeenAt: sql<string>`GREATEST(${devices.lastSeenAt}, COALESCE(${syncCursors.lastSyncedAt}, ${devices.lastSeenAt}))`,
+        })
+        .from(devices)
+        .leftJoin(syncCursors, eq(devices.id, syncCursors.deviceId))
+        .where(eq(devices.userId, userId))
+        .orderBy(sql`GREATEST(${devices.lastSeenAt}, COALESCE(${syncCursors.lastSyncedAt}, ${devices.lastSeenAt})) DESC`);
+
     return c.json(rows);
 });
 
