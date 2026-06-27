@@ -70,20 +70,26 @@ def sync_to_cloud(token: str):
                 if not rows:
                     break
 
+                def _iso(dt):
+                    if not dt:
+                        return None
+                    s = dt.isoformat()
+                    return s if (s.endswith("Z") or "+" in s) else s + "Z"
+
                 payload = [
                     {
-                        "source": r.source,
-                        "model": r.model,
-                        "timestamp": r.timestamp.isoformat() if r.timestamp else None,
-                        "session_id": r.session_id,
-                        "input_tokens": r.input_tokens,
-                        "output_tokens": r.output_tokens,
-                        "cache_read_tokens": r.cache_read_tokens,
-                        "cache_write_tokens": r.cache_write_tokens,
-                        "cost": r.cost,
-                        "project": r.project,
-                        "branch": r.branch,
-                        "latency_ms": r.latency_ms,
+                        "source": (r.source or "unknown")[:100],
+                        "model": (r.model[:200] if r.model else None),
+                        "timestamp": _iso(r.timestamp),
+                        "session_id": (r.session_id[:128] if r.session_id else None),
+                        "input_tokens": min(10_000_000, max(0, int(r.input_tokens or 0))),
+                        "output_tokens": min(10_000_000, max(0, int(r.output_tokens or 0))),
+                        "cache_read_tokens": min(10_000_000, max(0, int(r.cache_read_tokens or 0))),
+                        "cache_write_tokens": min(10_000_000, max(0, int(r.cache_write_tokens or 0))),
+                        "cost": min(100.0, max(0.0, float(r.cost or 0.0))),
+                        "project": (r.project[:500] if r.project else None),
+                        "branch": (r.branch[:500] if r.branch else None),
+                        "latency_ms": (min(3_600_000, max(0, int(r.latency_ms))) if r.latency_ms is not None else None),
                     }
                     for r in rows
                 ]

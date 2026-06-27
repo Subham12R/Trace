@@ -145,6 +145,8 @@ app.get("/sessions", requireAuth, readRateLimit, async (c) => {
         .select({
             sessionId: requests.sessionId,
             source: requests.source,
+            platform: devices.platform,
+            deviceName: devices.name,
             totalCost: sum(requests.cost),
             inputTokens: sum(requests.inputTokens),
             outputTokens: sum(requests.outputTokens),
@@ -153,8 +155,9 @@ app.get("/sessions", requireAuth, readRateLimit, async (c) => {
             endedAt: sql<string>`MAX(${requests.timestamp})`,
         })
         .from(requests)
+        .leftJoin(devices, eq(requests.deviceId, devices.id))
         .where(where)
-        .groupBy(requests.sessionId, requests.source)
+        .groupBy(requests.sessionId, requests.source, devices.platform, devices.name)
         .orderBy(sql`MAX(${requests.timestamp}) DESC`)
         .limit(100);
 
@@ -162,8 +165,10 @@ app.get("/sessions", requireAuth, readRateLimit, async (c) => {
         sessions: rows.map((r) => ({
             session_id: r.sessionId,
             source: r.source,
-            started_at: r.startedAt,
-            ended_at: r.endedAt,
+            platform: r.platform ?? null,
+            device_name: r.deviceName ?? null,
+            started_at: r.startedAt ? new Date(r.startedAt).toISOString() : "",
+            ended_at: r.endedAt ? new Date(r.endedAt).toISOString() : "",
             requests: num(r.requestCount),
             input_tokens: num(r.inputTokens),
             output_tokens: num(r.outputTokens),
