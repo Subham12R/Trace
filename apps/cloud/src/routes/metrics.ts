@@ -4,7 +4,7 @@ import { requireAuth } from "../lib/middleware.js";
 import { readRateLimit } from "../lib/rate-limit.js";
 import { TimeRangeSchema } from "../lib/validators.js";
 import { db } from "../db/index.js";
-import { requests } from "../db/schema.js";
+import { requests, devices } from "../db/schema.js";
 
 const app = new Hono<{
     Variables: { userId: string; user: { id: string; email: string; name: string } };
