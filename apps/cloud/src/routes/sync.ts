@@ -61,6 +61,11 @@ app.post("/push", requireAuth, syncRateLimit, zValidator("json", SyncPushSchema)
             set: { lastSyncedAt: new Date() },
         });
 
+    await db
+        .update(devices)
+        .set({ lastSeenAt: new Date() })
+        .where(eq(devices.id, deviceId!));
+
     return c.json({ inserted: rows.length });
 });
 
