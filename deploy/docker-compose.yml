@@ -1,9 +1,11 @@
 services:
-  app:
-    build:
-      context: ../apps/cloud
-      dockerfile: Dockerfile
-    env_file: .env
+  trace:
+    image: ghcr.io/subham12r/trace-cloud:latest
+    container_name: trace-cloud
     restart: unless-stopped
+
+    env_file:
+      - .env
+
     ports:
-      - "127.0.0.1:3001:3001"
+      - "127.0.0.1:3000:3000"
