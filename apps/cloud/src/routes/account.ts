@@ -6,7 +6,7 @@ import { account } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 
 const app = new Hono<{
-    Variables: { userId: string; user: { id: string; email: string; name: string } };
+    Variables: { userId: string; user: { id: string; email: string; name: string; image?: string } };
 }>();
 
 app.get("/", requireAuth, readRateLimit, async (c) => {
@@ -20,6 +20,7 @@ app.get("/", requireAuth, readRateLimit, async (c) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        image: user.image,
         providers,
     });
 });

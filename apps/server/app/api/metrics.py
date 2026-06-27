@@ -96,13 +96,14 @@ def trends(range: str = Query("today"), metric: str = Query("cost")):
 
         return [
             TrendPoint(
-                bucket=r.bucket,
-                source=r.source,
+                bucket=r.bucket or "",
+                source=r.source or "unknown",
                 input_tokens=int(r.input_tokens or 0),
                 output_tokens=int(r.output_tokens or 0),
                 cost=round(r.cost or 0.0, 2),
             )
             for r in rows
+            if r.bucket is not None
         ]
     finally:
         db.close()

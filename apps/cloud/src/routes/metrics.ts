@@ -75,9 +75,11 @@ app.get("/trends", requireAuth, readRateLimit, async (c) => {
     const unit = dateTruncUnit(range);
     const where = buildWhere(userId, rangeStart(range));
 
+    const bucketSql = sql<string>`date_trunc(${sql.raw(`'${unit}'`)}, ${requests.timestamp})`;
+
     const rows = await db
         .select({
-            bucket: sql<string>`date_trunc(${unit}, ${requests.timestamp})`,
+            bucket: bucketSql,
             source: requests.source,
             totalCost: sum(requests.cost),
             inputTokens: sum(requests.inputTokens),
@@ -86,12 +88,12 @@ app.get("/trends", requireAuth, readRateLimit, async (c) => {
         })
         .from(requests)
         .where(where)
-        .groupBy(sql`date_trunc(${unit}, ${requests.timestamp})`, requests.source)
-        .orderBy(sql`date_trunc(${unit}, ${requests.timestamp})`);
+        .groupBy(bucketSql, requests.source)
+        .orderBy(bucketSql);
 
     return c.json({
         buckets: rows.map((r) => ({
-            bucket: r.bucket,
+            bucket: r.bucket ? new Date(r.bucket).toISOString() : "",
             source: r.source,
             cost: round4(r.totalCost),
             input_tokens: num(r.inputTokens),

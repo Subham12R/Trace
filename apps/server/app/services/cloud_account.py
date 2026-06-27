@@ -31,7 +31,7 @@ def register_device(token: str) -> bool:
                 json={
                     "name": platform.node(),
                     "platform": sys.platform,
-                    "version": "0.1.0",
+                    "version": "0.5.0",
                 },
                 headers={"Authorization": f"Bearer {token}"},
             )
