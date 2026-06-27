@@ -31,12 +31,11 @@ app.use("*", logger());
 app.use(
     "*",
     cors({
-        origin: [
-            "http://localhost:3000",
-            "http://localhost:3001",
-            "https://traceanalytics.vercel.app",
-            "https://trace-fqbp.onrender.com",
-        ],
+        origin: (process.env.ALLOWED_ORIGINS ?? "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .concat(["http://localhost:3000", "http://localhost:3001"]),
         allowHeaders: ["Content-Type", "Authorization", "X-Device-Id"],
         allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
         credentials: true,
