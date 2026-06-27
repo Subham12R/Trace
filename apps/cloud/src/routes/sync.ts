@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../lib/middleware.js";
+import { syncRateLimit } from "../lib/rate-limit.js";
 import { SyncPushSchema } from "../lib/validators.js";
 import { db } from "../db/index.js";
 import { requests, devices, syncCursors } from "../db/schema.js";
@@ -10,7 +11,7 @@ const app = new Hono<{
     Variables: { userId: string; user: { id: string; email: string; name: string } };
 }>();
 
-app.post("/push", requireAuth, zValidator("json", SyncPushSchema), async (c) => {
+app.post("/push", requireAuth, syncRateLimit, zValidator("json", SyncPushSchema), async (c) => {
     const userId = c.get("userId");
     const rows = c.req.valid("json");
 

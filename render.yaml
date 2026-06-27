@@ -11,7 +11,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: BETTER_AUTH_URL
-        value: https://trace-fqbp.onrender.com
+        value: https://trace.monostack.in
       - key: DATABASE_URL
         sync: false
       - key: BETTER_AUTH_SECRET

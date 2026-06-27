@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../lib/middleware.js";
+import { deviceRateLimit } from "../lib/rate-limit.js";
 import { RegisterDeviceSchema } from "../lib/validators.js";
 import { db } from "../db/index.js";
 import { devices } from "../db/schema.js";
@@ -13,6 +14,7 @@ const app = new Hono<{
 app.post(
     "/register",
     requireAuth,
+    deviceRateLimit,
     zValidator("json", RegisterDeviceSchema),
     async (c) => {
         const userId = c.get("userId");

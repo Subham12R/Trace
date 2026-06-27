@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { requireAuth } from "../lib/middleware.js";
+import { readRateLimit } from "../lib/rate-limit.js";
 import { db } from "../db/index.js";
 import { account } from "../db/schema.js";
 import { eq } from "drizzle-orm";
@@ -8,7 +9,7 @@ const app = new Hono<{
     Variables: { userId: string; user: { id: string; email: string; name: string } };
 }>();
 
-app.get("/", requireAuth, async (c) => {
+app.get("/", requireAuth, readRateLimit, async (c) => {
     const user = c.get("user");
     const userAccounts = await db
         .select({ providerId: account.providerId })
