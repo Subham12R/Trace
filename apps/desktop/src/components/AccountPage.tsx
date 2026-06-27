@@ -10,7 +10,7 @@ import { LiquidCard } from "@/components/ui/LiquidCard";
 
 const CLOUD_LOGIN_URL = import.meta.env.VITE_TRACE_CLOUD_URL
   ? `${import.meta.env.VITE_TRACE_CLOUD_URL}/auth/login`
-  : "https://trace-fqbp.onrender.com/auth/login";
+  : "https://trace.monostack.in/auth/login";
 
 export function AccountPage() {
 	const { data: account, isLoading } = useCloudAccount();

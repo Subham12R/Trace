@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { sql, eq, and, gte, count, sum } from "drizzle-orm";
 import { requireAuth } from "../lib/middleware.js";
+import { readRateLimit } from "../lib/rate-limit.js";
 import { TimeRangeSchema } from "../lib/validators.js";
 import { db } from "../db/index.js";
 import { requests } from "../db/schema.js";
@@ -32,7 +33,7 @@ const round4 = (v: unknown) => Math.round((Number(v) || 0) * 10000) / 10000;
 const num = (v: unknown) => Number(v ?? 0);
 
 // GET /api/metrics/summary
-app.get("/summary", requireAuth, async (c) => {
+app.get("/summary", requireAuth, readRateLimit, async (c) => {
     const range = TimeRangeSchema.parse(c.req.query("range") ?? "today");
     const userId = c.get("userId");
     const where = buildWhere(userId, rangeStart(range));
@@ -68,7 +69,7 @@ app.get("/summary", requireAuth, async (c) => {
 });
 
 // GET /api/metrics/trends — grouped by time bucket AND source
-app.get("/trends", requireAuth, async (c) => {
+app.get("/trends", requireAuth, readRateLimit, async (c) => {
     const range = TimeRangeSchema.parse(c.req.query("range") ?? "today");
     const userId = c.get("userId");
     const unit = dateTruncUnit(range);
@@ -101,7 +102,7 @@ app.get("/trends", requireAuth, async (c) => {
 });
 
 // GET /api/metrics/models
-app.get("/models", requireAuth, async (c) => {
+app.get("/models", requireAuth, readRateLimit, async (c) => {
     const range = TimeRangeSchema.parse(c.req.query("range") ?? "today");
     const userId = c.get("userId");
     const where = buildWhere(userId, rangeStart(range));
@@ -133,7 +134,7 @@ app.get("/models", requireAuth, async (c) => {
 });
 
 // GET /api/metrics/sessions
-app.get("/sessions", requireAuth, async (c) => {
+app.get("/sessions", requireAuth, readRateLimit, async (c) => {
     const range = TimeRangeSchema.parse(c.req.query("range") ?? "today");
     const userId = c.get("userId");
     const where = buildWhere(userId, rangeStart(range));
@@ -170,7 +171,7 @@ app.get("/sessions", requireAuth, async (c) => {
 });
 
 // GET /api/metrics/sources
-app.get("/sources", requireAuth, async (c) => {
+app.get("/sources", requireAuth, readRateLimit, async (c) => {
     const range = TimeRangeSchema.parse(c.req.query("range") ?? "today");
     const userId = c.get("userId");
     const where = buildWhere(userId, rangeStart(range));
